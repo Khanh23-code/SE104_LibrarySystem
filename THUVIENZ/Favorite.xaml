@@ -1,0 +1,84 @@
+﻿<Window x:Class="THUVIENZ.Favorite"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Favorites" Height="900" Width="1400"
+        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
+
+    <Window.Background>
+        <ImageBrush ImageSource="pack://application:,,,/Images/bg.jpg" Stretch="UniformToFill"/>
+    </Window.Background>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Margin="20" CornerRadius="35" Background="#40FFFFFF">
+            <StackPanel Margin="10,30,10,10">
+                <TextBlock Text="📚 Librix" FontSize="32" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,50"/>
+
+                <Button Content="👤  Profile" Click="BtnProfile_Click" Style="{DynamicResource MenuBtn}"/>
+                <Button Content="❤️  Favorites" Background="#60FFFFFF" Style="{DynamicResource MenuBtn}"/>
+                <Button Content="🔍  Search" Click="BtnSearch_Click" Style="{DynamicResource MenuBtn}"/>
+                <Button Content="💰  Tiền phạt" Click="BtnFine_Click" Style="{DynamicResource MenuBtn}"/>
+                <Button Content="📜  Quy định" Click="BtnRules_Click" Style="{DynamicResource MenuBtn}"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="20,20,40,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="SÁCH YÊU THÍCH" FontSize="32" FontWeight="Bold" Foreground="White" Margin="0,0,0,20"/>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <WrapPanel Orientation="Horizontal" ItemWidth="500">
+                    <Border Background="#FFFAFA" CornerRadius="30" Margin="0,0,20,20" Height="250">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" CornerRadius="20" Margin="15" Width="120" Height="170" VerticalAlignment="Top">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="pack://application:,,,/Images/phai.png" Stretch="UniformToFill"/>
+                                </Border.Background>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="0,20,15,15">
+                                <TextBlock Text="Aam antir bhenpu" FontSize="22" FontWeight="Bold"/>
+                                <TextBlock Text="Author: Bibhutibhushan" FontSize="16" Foreground="#444"/>
+                                <TextBlock Text="Book ID: 20511xT" FontSize="16" Foreground="#444"/>
+                                <TextBlock Text="Price: ₹ 379" FontSize="20" FontWeight="SemiBold" Foreground="#2C8B2C" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </WrapPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+
+    <Window.Resources>
+        <Style x:Key="MenuBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="20,15"/>
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="15">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+</Window>
