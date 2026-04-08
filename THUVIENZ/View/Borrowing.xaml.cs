@@ -2,13 +2,14 @@
 
 namespace THUVIENZ
 {
-    public partial class Rules : Window
+    public partial class Borrowing : Window
     {
-        public Rules() { InitializeComponent(); }
+        public Borrowing() { InitializeComponent(); }
 
         private void BtnProfile_Click(object sender, RoutedEventArgs e) { new Profile().Show(); this.Close(); }
         private void BtnFavorite_Click(object sender, RoutedEventArgs e) { new Favorite().Show(); this.Close(); }
         private void BtnSearch_Click(object sender, RoutedEventArgs e) { new Search().Show(); this.Close(); }
-        private void BtnFine_Click(object sender, RoutedEventArgs e) { new Fine().Show(); this.Close(); }
+        private void BtnRules_Click(object sender, RoutedEventArgs e) { new Notifications().Show(); this.Close(); }
+
     }
 }
