@@ -68,7 +68,7 @@
                             <DropShadowEffect BlurRadius="15" Opacity="0.2" ShadowDepth="5"/>
                         </Ellipse.Effect>
                         <Ellipse.Fill>
-                            <ImageBrush ImageSource="pack://application:,,,/Images/phai.png" Stretch="UniformToFill"/>
+                            <ImageBrush ImageSource="/Assets/phai.png" Stretch="UniformToFill"/>
                         </Ellipse.Fill>
                     </Ellipse>
                 </Grid>
