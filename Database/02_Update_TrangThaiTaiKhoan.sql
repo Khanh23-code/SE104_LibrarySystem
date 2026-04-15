@@ -1,0 +1,8 @@
+USE QL_ThuVien;
+GO
+
+ALTER TABLE TAIKHOAN ADD TrangThai NVARCHAR(20) DEFAULT 'Pending';
+GO
+
+UPDATE TAIKHOAN SET TrangThai = 'Active';
+GO
