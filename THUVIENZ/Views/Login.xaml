@@ -32,7 +32,7 @@
                                 <DropShadowEffect BlurRadius="15" ShadowDepth="5" Opacity="0.3"/>
                             </Ellipse.Effect>
                             <Ellipse.Fill>
-                                <ImageBrush ImageSource="pack://application:,,,/Images/phai.png" Stretch="UniformToFill"/>
+                                <ImageBrush ImageSource="/Assets/phai.png" Stretch="UniformToFill"/>
                             </Ellipse.Fill>
                         </Ellipse>
 
