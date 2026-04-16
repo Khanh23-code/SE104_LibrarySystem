@@ -43,10 +43,10 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="1" Background="White" CornerRadius="35,35,35,35">
+                <Border Grid.Column="1" Background="White" CornerRadius="0,35,35,0">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="420">
 
-                        <Image Source="pack://application:,,,/Assets/Images/Logo.jpg" Width="360"/>
+                        <Image Source="pack://application:,,,/Assets/Images/Logo.jpg" Width="240"/>
                         <TextBlock Text="ĐĂNG NHẬP" FontSize="30" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center" Margin="0,0,0,40"/>
 
                         <TextBlock Text="ID tài khoản" FontSize="15" FontWeight="SemiBold" Foreground="#555" Margin="15,0,0,8"/>

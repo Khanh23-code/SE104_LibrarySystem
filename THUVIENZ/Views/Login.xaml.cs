@@ -76,13 +76,14 @@ namespace THUVIENZ.Views
         {
             Register registerWindow = new Register();
             registerWindow.Show();
-
             this.Close();
         }
 
         private void LnkForgot_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Tính năng khôi phục mật khẩu đang được xây dựng!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+            ForgotPassword forgotWindow = new ForgotPassword();
+            forgotWindow.Show();
+            this.Close();
         }
     }
 }
