@@ -12,14 +12,37 @@ namespace THUVIENZ.ViewModels
     /// </summary>
     public class LoginViewModel : ObservableObject
     {
-        private string _username = string.Empty;
-        public string Username
+        private string _idError = string.Empty;
+        public string IdError
         {
-            get => _username;
+            get => _idError;
+            set { _idError = value; OnPropertyChanged(); }
+        }
+
+        private string _passwordError = string.Empty;
+        public string PasswordError 
+        {             
+            get => _passwordError;
+            set { _passwordError = value; OnPropertyChanged(); }
+        }
+
+        private string _id = string.Empty;
+        public string Id
+        {
+            get => _id;
             set
             {
-                _username = value;
+                _id = value;
+
+                if (string.IsNullOrEmpty(_id))
+                    IdError = "Mã số không được để trống.";
+                else if (!InputValidator.IsValidId(_id))
+                    IdError = "Mã số không chứa khoảng trắng.";
+                else
+                    IdError = string.Empty;
+
                 OnPropertyChanged();
+                CommandManager.InvalidateRequerySuggested(); // Cập nhật trạng thái của các command liên quan nếu có
             }
         }
 
@@ -30,7 +53,16 @@ namespace THUVIENZ.ViewModels
             set
             {
                 _password = value;
+
+                if (string.IsNullOrEmpty(_password))
+                    PasswordError = "Mật khẩu không được để trống.";
+                else if (!InputValidator.IsValidPassword(_password))
+                    PasswordError = "Mật khẩu phải từ 6 ký tự và không có khoảng trắng.";
+                else
+                    PasswordError = string.Empty;
+
                 OnPropertyChanged();
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
@@ -41,7 +73,17 @@ namespace THUVIENZ.ViewModels
         public LoginViewModel()
         {
             _authService = new AuthService();
-            LoginCommand = new RelayCommand(ExecuteLogin);
+            LoginCommand = new RelayCommand(ExecuteLogin, CanExcuteLogin);
+        }
+
+        private bool CanExcuteLogin(object parameter)
+        {
+            if (String.IsNullOrEmpty(Id) || String.IsNullOrEmpty(Password))
+                return false;
+            if (!InputValidator.IsValidId(Id) || !InputValidator.IsValidPassword(Password))
+                return false;
+
+            return true;
         }
 
         private void ExecuteLogin(object parameter)
@@ -49,7 +91,7 @@ namespace THUVIENZ.ViewModels
             try
             {
                 // Gọi BLL để xử lý đăng nhập
-                string? role = _authService.Login(Username, Password);
+                string? role = _authService.Login(Id, Password);
 
                 if (role != null)
                 {

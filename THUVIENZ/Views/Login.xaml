@@ -50,10 +50,20 @@
                         <TextBlock Text="ĐĂNG NHẬP" FontSize="30" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center" Margin="0,0,0,40"/>
 
                         <TextBlock Text="ID tài khoản" FontSize="15" FontWeight="SemiBold" Foreground="#555" Margin="15,0,0,8"/>
-                        <TextBox x:Name="txtUserID" Style="{StaticResource RoundedPlaceholderTextBox}" Tag="Nhập ID"/>
+                        <TextBox x:Name="txtUserID" Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource RoundedPlaceholderTextBox}" Tag="Nhập ID"/>
+                        <TextBlock Text="{Binding IdError}" 
+                           Foreground="Red" 
+                           FontSize="11" 
+                           FontStyle="Italic"
+                           Margin="0,2,0,10" />
 
                         <TextBlock Text="Mật khẩu" FontSize="15" FontWeight="SemiBold" Foreground="#555" Margin="15,0,0,8"/>
-                        <uc:PasswordInput x:Name="txtPassword" Placeholder="Nhập mật khẩu"/>
+                        <uc:PasswordInput x:Name="txtPassword" Password="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Placeholder="Nhập mật khẩu"/>
+                        <TextBlock Text="{Binding PasswordError}" 
+                           Foreground="Red" 
+                           FontSize="11" 
+                           FontStyle="Italic"
+                           Margin="0,2,0,10" />
 
                         <Grid>
                             <TextBlock FontSize="14" FontWeight="Medium" HorizontalAlignment="Left" Margin="0,5,5,40">
@@ -69,7 +79,7 @@
                             </TextBlock>
                         </Grid>
 
-                        <Button Content="Đăng nhập" Click="BtnSubmit_Click" Style="{StaticResource PrimaryGreenButton}" Margin="0,0,0,20"/>
+                        <Button Content="Đăng nhập" Command="{Binding LoginCommand}" Style="{StaticResource PrimaryGreenButton}" Margin="0,0,0,20"/>
                     </StackPanel>
                 </Border>
             </Grid>

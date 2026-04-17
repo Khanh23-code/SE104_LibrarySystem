@@ -59,7 +59,7 @@ namespace THUVIENZ.ViewModels
                 if (string.IsNullOrWhiteSpace(_id))
                     IdError = "Mã số không được để trống.";
                 else if (!InputValidator.IsValidId(_id))
-                    IdError = "ID không được chứa khoảng trắng.";
+                    IdError = "Mã số không chứa khoảng trắng.";
                 else
                     IdError = string.Empty;
                 OnPropertyChanged(); 
