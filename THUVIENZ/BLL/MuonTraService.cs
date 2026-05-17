@@ -19,6 +19,7 @@ namespace THUVIENZ.BLL
         public int SoNgayTre { get; set; }
     }
 
+
     /// <summary>
     /// Service nghiệp vụ xử lý Mượn và Trả sách tập trung theo cấu trúc DB mới gộp chung.
     /// Tuân thủ nguyên tắc Strict Null Safety và chú thích 100% Tiếng Việt.
@@ -110,6 +111,8 @@ namespace THUVIENZ.BLL
                             biDinhChi = true;
                         }
                     }
+
+
                 }
 
                 // Lưu toàn bộ thay đổi xuống DB
@@ -141,6 +144,25 @@ namespace THUVIENZ.BLL
         /// <summary>
         /// Thực hiện thủ tục mượn danh sách các cuốn sách vật lý cho một Độc giả.
         /// </summary>
+        /// <summary>
+        /// Gia hạn hạn trả của một cuốn sách vật lý đang được mượn.
+        /// Tìm bản ghi ChiTietMuonTra chưa trả và cộng thêm SoNgayMuonToiDa vào HanTra hiện tại.
+        /// </summary>
+        public async Task<bool> GiaHanSachAsync(int maCuonSach)
+        {
+            var chiTiet = await _context.ChiTietMuonTras
+                .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.NgayTraThucTe == null);
+
+            if (chiTiet == null)
+                throw new InvalidOperationException("Không tìm thấy bản ghi mượn đang hoạt động cho cuốn sách này.");
+
+            int soNgayGiaHan = (int)await _settingsService.GetValueAsync("SoNgayMuonToiDa");
+            chiTiet.HanTra = chiTiet.HanTra.AddDays(soNgayGiaHan);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> ThucHienMuonSachAsync(int maDocGia, List<int> danhSachMaCuonSach)
         {
             if (danhSachMaCuonSach == null || danhSachMaCuonSach.Count == 0)

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -23,6 +24,8 @@ namespace THUVIENZ.ViewModels
         public string DueDate { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
     }
+
+
 
     /// <summary>
     /// ViewModel xử lý logic mượn sách vật lý tại Kiosk/Quầy tự phục vụ.
@@ -87,6 +90,8 @@ namespace THUVIENZ.ViewModels
 
         public ICommand AddToCartCommand { get; }
         public ICommand CheckoutCommand { get; }
+        public ICommand GiaHanCommand { get; }
+        public ICommand TraSachCommand { get; }
 
         private readonly MuonTraService _muonTraService;
         private readonly LmsDbContext _context;
@@ -98,6 +103,52 @@ namespace THUVIENZ.ViewModels
 
             AddToCartCommand = new RelayCommand(_ => ExecuteAddToCart());
             CheckoutCommand = new RelayCommand(_ => ExecuteCheckout());
+            GiaHanCommand = new RelayCommand<MyBorrowedBookItem>(item => _ = ExecuteGiaHanAsync(item));
+            TraSachCommand = new RelayCommand<MyBorrowedBookItem>(item => _ = ExecuteTraSachAsync(item));
+        }
+
+        private async Task ExecuteGiaHanAsync(MyBorrowedBookItem item)
+        {
+            if (item == null) return;
+            var parts = item.TicketID?.Split('-');
+            if (parts == null || parts.Length < 3) return;
+            if (!int.TryParse(parts[2], out int maCuonSach)) return;
+
+            try
+            {
+                bool ok = await _muonTraService.GiaHanSachAsync(maCuonSach);
+                if (ok)
+                {
+                    MessageBox.Show("Gia hạn thành công.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoadMyBorrowedBooks();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi gia hạn: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task ExecuteTraSachAsync(MyBorrowedBookItem item)
+        {
+            if (item == null) return;
+            var parts = item.TicketID?.Split('-');
+            if (parts == null || parts.Length < 3) return;
+            if (!int.TryParse(parts[2], out int maCuonSach)) return;
+
+            try
+            {
+                var result = await _muonTraService.ThucHienTraSachAsync(maCuonSach);
+                if (result.ThanhCong)
+                {
+                    MessageBox.Show(result.ThongBao, "Trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoadMyBorrowedBooks();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi trả sách: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         /// <summary>
@@ -110,7 +161,6 @@ namespace THUVIENZ.ViewModels
                 MyBorrowedBooks.Clear();
                 return;
             }
-
             try
             {
                 var list = await _context.ChiTietMuonTras
