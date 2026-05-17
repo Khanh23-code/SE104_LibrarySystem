@@ -85,8 +85,17 @@ namespace THUVIENZ.ViewModels
             {
                 _myBorrowedBooks = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(OverdueCount));
+                OnPropertyChanged(nameof(TotalFineDisplay));
             }
         }
+
+        /// <summary>Số sách quá hạn chưa trả.</summary>
+        public int OverdueCount => _myBorrowedBooks.Count(b => b.Status == "Quá hạn");
+
+        /// <summary>Tổng tiền phạt ước tính (hiển thị số cuốn quá hạn).</summary>
+        public string TotalFineDisplay =>
+            OverdueCount == 0 ? "0 VNĐ" : $"{OverdueCount} cuốn cần thanh toán";
 
         public ICommand AddToCartCommand { get; }
         public ICommand CheckoutCommand { get; }
