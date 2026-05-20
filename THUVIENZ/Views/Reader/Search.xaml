@@ -83,7 +83,9 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <comp:SearchBar Grid.Row="1"/>
+                    <comp:SearchBar Grid.Column="0" Grid.ColumnSpan="2"
+                                    SearchText="{Binding SearchKeyword, Mode=TwoWay}" 
+                                    SearchCommand="{Binding SearchCommand}"/>
                 </Grid>
 
                 <Border Grid.Row="2" Background="White" CornerRadius="20" BorderBrush="#E5E7EB" BorderThickness="1">
@@ -92,18 +94,32 @@
                     </Border.Effect>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10">
+                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10" ItemsSource="{Binding SearchResults}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Mã Sách" Binding="{Binding BookID}" Width="120"/>
-                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding Title}" Width="*"/>
-                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding Author}" Width="200"/>
-                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding Category}" Width="150"/>
-                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding Status}" Width="120"/>
+                                <DataGridTextColumn Header="Mã Sách" Binding="{Binding MaSach}" Width="120"/>
+                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="*"/>
+                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding TacGia}" Width="200"/>
+                                <DataGridTextColumn Header="Năm XB" Binding="{Binding NamXuatBan}" Width="100"/>
+                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding TheLoaiSach.TenTheLoai}" Width="150"/>
+                                
+                                <DataGridTemplateColumn Header="Yêu Thích" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="❤" 
+                                                    Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                    CommandParameter="{Binding}"
+                                                    FontSize="16" Background="Transparent" Foreground="#FF4C4C" BorderThickness="0" Cursor="Hand" ToolTip="Khóa/Bỏ Yêu thích"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
 
                                 <DataGridTemplateColumn Header="Hành Động" Width="120">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="Chi tiết" Background="#F3F4F6" Foreground="#4285F4" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="10,5">
+                                            <Button Content="Mượn" 
+                                                    Command="{Binding DataContext.BorrowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                    CommandParameter="{Binding}"
+                                                    Background="#4285F4" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="10,5">
                                                 <Button.Resources>
                                                     <Style TargetType="Border">
                                                         <Setter Property="CornerRadius" Value="8"/>

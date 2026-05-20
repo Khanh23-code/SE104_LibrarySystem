@@ -15,6 +15,15 @@ namespace THUVIENZ.Views.Components
             set { SetValue(SearchTextProperty, value); }
         }
 
+        public static readonly DependencyProperty SearchCommandProperty =
+            DependencyProperty.Register("SearchCommand", typeof(System.Windows.Input.ICommand), typeof(SearchBar));
+
+        public System.Windows.Input.ICommand SearchCommand
+        {
+            get { return (System.Windows.Input.ICommand)GetValue(SearchCommandProperty); }
+            set { SetValue(SearchCommandProperty, value); }
+        }
+
         public SearchBar()
         {
             InitializeComponent();

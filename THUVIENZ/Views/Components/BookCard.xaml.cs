@@ -55,6 +55,36 @@ namespace THUVIENZ.Views.Components
             set { SetValue(CoverImageProperty, value); }
         }
 
+        // 6. Like Command
+        public static readonly DependencyProperty LikeCommandProperty =
+            DependencyProperty.Register("LikeCommand", typeof(System.Windows.Input.ICommand), typeof(BookCard));
+
+        public System.Windows.Input.ICommand LikeCommand
+        {
+            get { return (System.Windows.Input.ICommand)GetValue(LikeCommandProperty); }
+            set { SetValue(LikeCommandProperty, value); }
+        }
+
+        // 7. Borrow Command
+        public static readonly DependencyProperty BorrowCommandProperty =
+            DependencyProperty.Register("BorrowCommand", typeof(System.Windows.Input.ICommand), typeof(BookCard));
+
+        public System.Windows.Input.ICommand BorrowCommand
+        {
+            get { return (System.Windows.Input.ICommand)GetValue(BorrowCommandProperty); }
+            set { SetValue(BorrowCommandProperty, value); }
+        }
+
+        // 8. Command Parameter
+        public static readonly DependencyProperty CommandParameterProperty =
+            DependencyProperty.Register("CommandParameter", typeof(object), typeof(BookCard));
+
+        public object CommandParameter
+        {
+            get { return (object)GetValue(CommandParameterProperty); }
+            set { SetValue(CommandParameterProperty, value); }
+        }
+
         public BookCard()
         {
             InitializeComponent();

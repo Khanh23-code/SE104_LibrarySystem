@@ -30,7 +30,7 @@
                             <DropShadowEffect BlurRadius="15" Opacity="0.2" ShadowDepth="5"/>
                         </Ellipse.Effect>
                         <Ellipse.Fill>
-                            <ImageBrush ImageSource="/Assets/phai.png" Stretch="UniformToFill"/>
+                            <ImageBrush ImageSource="{Binding CurrentReader.AnhDaiDien, TargetNullValue='/Assets/phai.png', FallbackValue='/Assets/phai.png'}" Stretch="UniformToFill"/>
                         </Ellipse.Fill>
                     </Ellipse>
                 </Grid>
@@ -45,24 +45,24 @@
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="Họ và Tên" FontSize="16" FontWeight="SemiBold" Foreground="#555" Margin="10,0,0,8"/>
                         <Border Background="#F3F4F6" CornerRadius="12" Height="60" Margin="0,0,0,30" BorderBrush="#E5E7EB" BorderThickness="2">
-                            <TextBox Text="Nguyễn Văn Reader" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="Black"/>
+                            <TextBox Text="{Binding CurrentReader.HoTen, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="Black"/>
                         </Border>
 
                         <TextBlock Text="Mã Độc Giả (Reader ID)" FontSize="16" FontWeight="SemiBold" Foreground="#555" Margin="10,0,0,8"/>
                         <Border Background="#F3F4F6" CornerRadius="12" Height="60" Margin="0,0,0,30" BorderBrush="#E5E7EB" BorderThickness="2">
-                            <TextBox Text="RD-2023" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="#888" IsReadOnly="True"/>
+                            <TextBox Text="{Binding CurrentReader.MaDocGia, Mode=OneWay}" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="#888" IsReadOnly="True"/>
                         </Border>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="Số điện thoại" FontSize="16" FontWeight="SemiBold" Foreground="#555" Margin="10,0,0,8"/>
                         <Border Background="#F3F4F6" CornerRadius="12" Height="60" Margin="0,0,0,30" BorderBrush="#E5E7EB" BorderThickness="2">
-                            <TextBox Text="0909123456" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="Black"/>
+                            <TextBox Text="{Binding CurrentReader.SoDienThoai, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="Black"/>
                         </Border>
 
                         <TextBlock Text="Địa chỉ liên hệ" FontSize="16" FontWeight="SemiBold" Foreground="#555" Margin="10,0,0,8"/>
                         <Border Background="#F3F4F6" CornerRadius="12" Height="60" Margin="0,0,0,30" BorderBrush="#E5E7EB" BorderThickness="2">
-                            <TextBox Text="Bình Dương" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="Black"/>
+                            <TextBox Text="{Binding CurrentReader.DiaChi, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="15,0" Foreground="Black"/>
                         </Border>
                     </StackPanel>
                 </Grid>

@@ -29,6 +29,8 @@ namespace THUVIENZ.DAL
         public DbSet<ChiTietMuonTra> ChiTietMuonTras { get; set; } = null!;
         public DbSet<ThamSo> ThamSos { get; set; } = null!;
         public DbSet<PhieuThuTienPhat> PhieuThuTienPhats { get; set; } = null!;
+        public DbSet<SachYeuThich> SachYeuThichs { get; set; } = null!;
+        public DbSet<YeuCauMuon> YeuCauMuons { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -60,6 +62,8 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<ChiTietMuonTra>().ToTable("CHITIETMUONTRA", tb => tb.HasTrigger("trg_SyncCuonSachStatus"));
             modelBuilder.Entity<ThamSo>().ToTable("THAMSO");
             modelBuilder.Entity<PhieuThuTienPhat>().ToTable("PHIEUTHUTIENPHAT");
+            modelBuilder.Entity<SachYeuThich>().ToTable("SACHYEUTHICH");
+            modelBuilder.Entity<YeuCauMuon>().ToTable("YEUCAUMUON");
 
             // ====================================================================
             // 2. ĐỊNH NGHĨA KHÓA CHÍNH (PRIMARY KEYS)
@@ -73,6 +77,8 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<PhieuMuon>().HasKey(p => p.MaPhieuMuon);
             modelBuilder.Entity<ThamSo>().HasKey(t => t.TenThamSo);
             modelBuilder.Entity<PhieuThuTienPhat>().HasKey(p => p.MaPhieuThu);
+            modelBuilder.Entity<YeuCauMuon>().HasKey(y => y.MaYeuCau);
+            modelBuilder.Entity<SachYeuThich>().HasKey(s => new { s.MaDocGia, s.MaSach });
 
             // Cấu hình Khóa chính phức hợp (Composite Key) cho bảng gộp mượn trả
             modelBuilder.Entity<ChiTietMuonTra>()
@@ -141,6 +147,32 @@ namespace THUVIENZ.DAL
                 .HasOne(p => p.DocGia)
                 .WithMany(d => d.PhieuThuTienPhats)
                 .HasForeignKey(p => p.MaDocGia)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Quan hệ: Sách Yêu Thích 
+            modelBuilder.Entity<SachYeuThich>()
+                .HasOne(s => s.DocGia)
+                .WithMany()
+                .HasForeignKey(s => s.MaDocGia)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SachYeuThich>()
+                .HasOne(s => s.Sach)
+                .WithMany()
+                .HasForeignKey(s => s.MaSach)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Quan hệ: Yêu cầu mượn
+            modelBuilder.Entity<YeuCauMuon>()
+                .HasOne(y => y.DocGia)
+                .WithMany()
+                .HasForeignKey(y => y.MaDocGia)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<YeuCauMuon>()
+                .HasOne(y => y.Sach)
+                .WithMany()
+                .HasForeignKey(y => y.MaSach)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

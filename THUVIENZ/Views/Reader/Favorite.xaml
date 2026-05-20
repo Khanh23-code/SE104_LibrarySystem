@@ -40,15 +40,25 @@
                 </StackPanel>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" BorderThickness="0">
-                    <WrapPanel Orientation="Horizontal">
-
-                        <comp:BookCard BookTitle="Đắc Nhân Tâm" Author="Dale Carnegie" BookId="DNT-101" Price="₹ 150" CoverImage="/Assets/phai.png"/>
-
-                        <comp:BookCard BookTitle="Clean Code" Author="Robert C. Martin" BookId="IT-404" Price="₹ 890" CoverImage="/Assets/phai.png"/>
-
-                        <comp:BookCard BookTitle="Nhà Giả Kim" Author="Paulo Coelho" BookId="NGK-999" Price="₹ 220" CoverImage="/Assets/phai.png"/>
-
-                    </WrapPanel>
+                    <ItemsControl ItemsSource="{Binding FavoriteBooks}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <comp:BookCard BookTitle="{Binding TenSach}" 
+                                               Author="{Binding TacGia}" 
+                                               BookId="{Binding MaSach}" 
+                                               Price="{Binding TriGia}" 
+                                               CoverImage="{Binding HinhAnh, TargetNullValue='/Assets/phai.png', FallbackValue='/Assets/phai.png'}"
+                                               CommandParameter="{Binding}"
+                                               LikeCommand="{Binding DataContext.RemoveFavoriteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                               BorrowCommand="{Binding DataContext.BorrowCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </ScrollViewer>
             </Grid>
         </Border>

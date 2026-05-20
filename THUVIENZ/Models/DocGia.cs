@@ -165,6 +165,20 @@ namespace THUVIENZ.Models
             }
         }
 
+        private string? _anhDaiDien;
+        /// <summary>
+        /// Ảnh đại diện của độc giả.
+        /// </summary>
+        public string? AnhDaiDien
+        {
+            get => _anhDaiDien;
+            set
+            {
+                _anhDaiDien = value;
+                OnPropertyChanged();
+            }
+        }
+
         /// <summary>
         /// Đối tượng Loại Độc giả liên kết (Quan hệ N-1).
         /// </summary>

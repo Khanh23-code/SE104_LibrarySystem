@@ -113,6 +113,7 @@ namespace THUVIENZ.ViewModels
                         MessageBoxImage.Information);
 
                     OnLoginSuccess?.Invoke();
+                    UserSession.UserLoggedIn?.Invoke();
                 }
                 else
                 {

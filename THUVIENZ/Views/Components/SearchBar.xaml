@@ -30,7 +30,7 @@
             </Grid>
         </Border>
 
-        <Button Grid.Column="1" Content="Tìm kiếm" Width="150" Height="60" Foreground="White" FontSize="18" FontWeight="Bold" Cursor="Hand">
+        <Button Grid.Column="1" Content="Tìm kiếm" Width="150" Height="60" Foreground="White" FontSize="18" FontWeight="Bold" Cursor="Hand" Command="{Binding SearchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
             <Button.Style>
                 <Style TargetType="Button">
                     <Setter Property="Background" Value="#4285F4"/>
