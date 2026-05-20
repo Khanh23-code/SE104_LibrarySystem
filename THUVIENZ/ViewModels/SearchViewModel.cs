@@ -59,7 +59,28 @@ namespace THUVIENZ.ViewModels
         /// </summary>
         public async void ExecuteSearch(object? parameter = null)
         {
-            var books = await _searchService.SearchAsync(SearchKeyword);
+            var books = (await _searchService.SearchAsync(SearchKeyword)).ToList();
+            
+            var username = UserSession.UserID;
+            if (!string.IsNullOrEmpty(username))
+            {
+                using var context = new LmsDbContext();
+                var docGia = await context.DocGias.AsNoTracking().FirstOrDefaultAsync(d => d.TenDangNhap == username);
+                if (docGia != null)
+                {
+                    var favoriteBookIds = await context.SachYeuThichs
+                        .AsNoTracking()
+                        .Where(s => s.MaDocGia == docGia.MaDocGia)
+                        .Select(s => s.MaSach)
+                        .ToListAsync();
+                        
+                    foreach (var book in books)
+                    {
+                        book.IsFavorite = favoriteBookIds.Contains(book.MaSach);
+                    }
+                }
+            }
+
             SearchResults = new ObservableCollection<Sach>(books);
         }
 
@@ -95,24 +116,19 @@ namespace THUVIENZ.ViewModels
             var docGia = await context.DocGias.FirstOrDefaultAsync(d => d.TenDangNhap == username);
             if (docGia == null) return;
 
-            var fav = await context.SachYeuThichs.FirstOrDefaultAsync(s => s.MaDocGia == docGia.MaDocGia && s.MaSach == sach.MaSach);
             var favoriteService = new THUVIENZ.BLL.FavoriteService();
-            bool isAdded;
-            if (fav != null)
-            {
-                await favoriteService.RemoveFavoriteAsync(docGia.MaDocGia, sach.MaSach);
-                isAdded = false;
-            }
-            else
+            // Since CheckBox binding updates sach.IsFavorite before the command executes, 
+            // we can just match DB state to sach.IsFavorite
+            if (sach.IsFavorite)
             {
                 await favoriteService.AddFavoriteAsync(docGia.MaDocGia, sach.MaSach);
-                isAdded = true;
+                // MessageBox.Show("Đã thêm vào mục yêu thích.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-
-            if (isAdded)
-                MessageBox.Show("Đã thêm vào mục yêu thích.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
             else
-                MessageBox.Show("Đã gỡ khỏi mục yêu thích.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+            {
+                await favoriteService.RemoveFavoriteAsync(docGia.MaDocGia, sach.MaSach);
+                // MessageBox.Show("Đã gỡ khỏi mục yêu thích.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
     }
 }

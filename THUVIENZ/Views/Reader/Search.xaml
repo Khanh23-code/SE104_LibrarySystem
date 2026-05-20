@@ -32,19 +32,19 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush" Value="#F3F4F6"/>
             <Setter Property="Padding" Value="0,10"/>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#EFF6FF"/>
-                    <Setter Property="Foreground" Value="#1D4ED8"/>
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F3F4F6"/>
-                </Trigger>
-            </Style.Triggers>
+            <!-- Removes hover and selection highlights -->
+            <Setter Property="Background" Value="Transparent"/>
+            <Style.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Transparent" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="Black" />
+            </Style.Resources>
         </Style>
 
         <Style TargetType="DataGridCell">
             <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
@@ -93,22 +93,22 @@
                         <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2"/>
                     </Border.Effect>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10" ItemsSource="{Binding SearchResults}">
-                            <DataGrid.Columns>
+                    <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10" ItemsSource="{Binding SearchResults}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <DataGrid.Columns>
                                 <DataGridTextColumn Header="Mã Sách" Binding="{Binding MaSach}" Width="120"/>
-                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="*"/>
+                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="250"/>
                                 <DataGridTextColumn Header="Tác Giả" Binding="{Binding TacGia}" Width="200"/>
                                 <DataGridTextColumn Header="Năm XB" Binding="{Binding NamXuatBan}" Width="100"/>
+                                <DataGridTextColumn Header="Nhà Xuất Bản" Binding="{Binding NhaXuatBan}" Width="150"/>
                                 <DataGridTextColumn Header="Thể Loại" Binding="{Binding TheLoaiSach.TenTheLoai}" Width="150"/>
-                                
+
                                 <DataGridTemplateColumn Header="Yêu Thích" Width="100">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="❤" 
-                                                    Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                                    CommandParameter="{Binding}"
-                                                    FontSize="16" Background="Transparent" Foreground="#FF4C4C" BorderThickness="0" Cursor="Hand" ToolTip="Khóa/Bỏ Yêu thích"/>
+                                            <CheckBox IsChecked="{Binding IsFavorite, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                      Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                      CommandParameter="{Binding}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" ToolTip="Khóa/Bỏ Yêu thích"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -131,7 +131,6 @@
                                 </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
-                    </ScrollViewer>
                 </Border>
             </Grid>
         </Border>
