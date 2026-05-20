@@ -18,16 +18,19 @@
             <Setter Property="GridLinesVisibility"  Value="None"/>
             <Setter Property="AutoGenerateColumns"  Value="False"/>
             <Setter Property="IsReadOnly"           Value="True"/>
-            <Setter Property="SelectionMode"        Value="Single"/>
+            <Setter Property="SelectionMode"        Value="Extended"/>
+            <Setter Property="SelectionUnit"        Value="FullRow"/>
             <Setter Property="FontSize"             Value="15"/>
             <Setter Property="CanUserResizeRows"    Value="False"/>
+            <!-- Add neat UI spacing -->
+            <Setter Property="RowHeight"            Value="60"/>
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
             <Setter Property="Background"     Value="#F3F4F6"/>
             <Setter Property="Foreground"     Value="#6B7280"/>
             <Setter Property="FontWeight"     Value="Bold"/>
-            <Setter Property="Padding"        Value="15,12"/>
+            <Setter Property="Padding"        Value="15,16"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush"    Value="#E5E7EB"/>
         </Style>
@@ -35,8 +38,13 @@
         <Style TargetType="DataGridRow">
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="BorderBrush"     Value="#F3F4F6"/>
-            <Setter Property="Padding"         Value="0,8"/>
+            <!-- Remove highlight when row is clicked/selected -->
             <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderBrush" Value="#F3F4F6"/>
+                </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#EFF6FF"/>
                 </Trigger>
@@ -46,15 +54,24 @@
         <Style TargetType="DataGridCell">
             <Setter Property="Padding" Value="15,8"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
-                        <Border Padding="{TemplateBinding Padding}" Background="Transparent">
+                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
                             <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <!-- Remove highlight when cell is selected -->
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Action button base style -->
@@ -115,12 +132,12 @@
                                 <TextBlock FontSize="13" Foreground="#6B7280">
                                     <Run Text="Sách quá hạn: "/>
                                     <Run FontWeight="Bold" Foreground="#DC2626"
-                                         Text="{Binding OverdueCount}"/>
+                                         Text="{Binding OverdueCount, Mode=OneWay}"/>
                                 </TextBlock>
                                 <TextBlock FontSize="13" Foreground="#6B7280">
                                     <Run Text="Tổng tiền phạt: "/>
                                     <Run FontWeight="Bold" Foreground="#DC2626"
-                                         Text="{Binding TotalFineDisplay}"/>
+                                         Text="{Binding TotalFineDisplay, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
                         </StackPanel>
@@ -134,122 +151,104 @@
                         <DropShadowEffect BlurRadius="8" Opacity="0.06" ShadowDepth="2"/>
                     </Border.Effect>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid Style="{StaticResource ModernDataGrid}"
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <DataGrid Grid.Row="0"
+                                  Style="{StaticResource ModernDataGrid}"
                                   Margin="6"
-                                  ItemsSource="{Binding MyBorrowedBooks}">
+                                  ItemsSource="{Binding MyBorrowedBooks}"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
 
-                                <!-- Mã Phiếu -->
-                                <DataGridTextColumn Header="Mã Phiếu"
-                                                    Binding="{Binding TicketID}"
-                                                    Width="130"/>
+                                    <!-- Mã Phiếu -->
+                                    <DataGridTextColumn Header="Mã Phiếu"
+                                                        Binding="{Binding TicketID}"
+                                                        Width="150" MinWidth="130"/>
 
-                                <!-- Tên Sách -->
-                                <DataGridTextColumn Header="Tên Sách"
-                                                    Binding="{Binding BookTitle}"
-                                                    Width="*">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="FontWeight" Value="SemiBold"/>
-                                            <Setter Property="Foreground" Value="#111827"/>
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                    <!-- Tên Sách -->
+                                    <DataGridTextColumn Header="Tên Sách"
+                                                        Binding="{Binding BookTitle}"
+                                                        Width="*" MinWidth="250">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Foreground" Value="#111827"/>
+                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
 
-                                <!-- Ngày Mượn -->
-                                <DataGridTextColumn Header="Ngày Mượn"
-                                                    Binding="{Binding BorrowDate}"
-                                                    Width="130"/>
+                                    <!-- Ngày Mượn -->
+                                    <DataGridTextColumn Header="Ngày Mượn"
+                                                        Binding="{Binding BorrowDate}"
+                                                        Width="150" MinWidth="130"/>
 
-                                <!-- Hạn Trả -->
-                                <DataGridTextColumn Header="Hạn Trả"
-                                                    Binding="{Binding DueDate}"
-                                                    Width="130"/>
+                                    <!-- Hạn Trả -->
+                                    <DataGridTextColumn Header="Hạn Trả"
+                                                        Binding="{Binding DueDate}"
+                                                        Width="150" MinWidth="130"/>
 
-                                <!-- Trạng Thái — colored badge -->
-                                <DataGridTemplateColumn Header="Trạng Thái" Width="130">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="{Binding Status, Converter={StaticResource StatusToBg}}"
-                                                    CornerRadius="20" Padding="12,4"
-                                                    HorizontalAlignment="Center">
-                                                <TextBlock Text="{Binding Status}"
-                                                           Foreground="{Binding Status, Converter={StaticResource StatusToFg}}"
-                                                           FontWeight="SemiBold" FontSize="13"
-                                                           HorizontalAlignment="Center"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                    <!-- Trạng Thái — colored badge -->
+                                    <DataGridTemplateColumn Header="Trạng Thái" Width="150" MinWidth="130">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{Binding Status, Converter={StaticResource StatusToBg}}"
+                                                        CornerRadius="20" Padding="12,6"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               Foreground="{Binding Status, Converter={StaticResource StatusToFg}}"
+                                                               FontWeight="SemiBold" FontSize="13"
+                                                               HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
 
-                                <!-- Hành Động -->
-                                <DataGridTemplateColumn Header="Hành Động" Width="210">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-
-                                                <!-- Gia hạn — only shown when book is not returned -->
-                                                <Button Content="⏱ Gia hạn"
-                                                        Margin="0,0,6,0"
-                                                        Command="{Binding DataContext.GiaHanCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
-                                                            <Setter Property="Background" Value="#EFF6FF"/>
-                                                            <Setter Property="Foreground" Value="#2563EB"/>
+                                    <!-- Hành Động -->
+                                    <DataGridTemplateColumn Header="Hành Động" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                                          HorizontalAlignment="Center" 
+                                                          VerticalAlignment="Center">
+                                                    <CheckBox.Style>
+                                                        <Style TargetType="CheckBox">
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Status}" Value="Đã trả">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Setter Property="IsEnabled" Value="False"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
-                                                    </Button.Style>
-                                                </Button>
-
-                                                <!-- Trả sách — only shown when book is not returned -->
-                                                <Button Content="↩ Trả sách"
-                                                        Margin="0"
-                                                        Command="{Binding DataContext.TraSachCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}">
-                                                    <Button.Style>
-                                                        <Style TargetType="Button" BasedOn="{StaticResource ActionBtn}">
-                                                            <Setter Property="Background" Value="#FEF2F2"/>
-                                                            <Setter Property="Foreground" Value="#DC2626"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Status}" Value="Đã trả">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Button.Style>
-                                                </Button>
-
-                                                <!-- Returned indicator -->
-                                                <TextBlock Text="✓ Đã trả" Foreground="#059669"
-                                                           FontWeight="SemiBold" FontSize="13"
-                                                           VerticalAlignment="Center">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Status}" Value="Đã trả">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                                    </CheckBox.Style>
+                                                </CheckBox>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
 
                             </DataGrid.Columns>
-                        </DataGrid>
-                    </ScrollViewer>
+                                </DataGrid>
+
+                        <!-- Actions bar -->
+                        <Border Grid.Row="1" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="20">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="⏱ Gia hạn đã chọn"
+                                        Margin="0,0,12,0"
+                                        Command="{Binding GiaHanCommand}"
+                                        Style="{StaticResource ActionBtn}"
+                                        Background="#EFF6FF" Foreground="#2563EB"/>
+
+                                <Button Content="↩ Trả sách đã chọn"
+                                        Command="{Binding TraSachCommand}"
+                                        Style="{StaticResource ActionBtn}"
+                                        Background="#FEF2F2" Foreground="#DC2626"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Border>
 
             </Grid>

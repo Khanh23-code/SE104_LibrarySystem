@@ -151,13 +151,23 @@ namespace THUVIENZ.BLL
         public async Task<bool> GiaHanSachAsync(int maCuonSach)
         {
             var chiTiet = await _context.ChiTietMuonTras
+                .Include(c => c.PhieuMuon)
                 .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.NgayTraThucTe == null);
 
             if (chiTiet == null)
                 throw new InvalidOperationException("Không tìm thấy bản ghi mượn đang hoạt động cho cuốn sách này.");
 
-            int soNgayGiaHan = (int)await _settingsService.GetValueAsync("SoNgayMuonToiDa");
-            chiTiet.HanTra = chiTiet.HanTra.AddDays(soNgayGiaHan);
+            if (chiTiet.HanTra < DateTime.Now)
+                throw new InvalidOperationException("Không thể gia hạn vì sách đã quá hạn.");
+
+            int soNgayMuonToiDa = (int)await _settingsService.GetValueAsync("SoNgayMuonToiDa");
+            int currentDays = (int)Math.Round((chiTiet.HanTra - chiTiet.PhieuMuon!.NgayMuon).TotalDays);
+            int extensions = (currentDays - soNgayMuonToiDa) / 14;
+
+            if (extensions >= 2)
+                throw new InvalidOperationException("Đã đạt số lần gia hạn tối đa (2 lần).");
+
+            chiTiet.HanTra = chiTiet.HanTra.AddDays(14);
 
             await _context.SaveChangesAsync();
             return true;
