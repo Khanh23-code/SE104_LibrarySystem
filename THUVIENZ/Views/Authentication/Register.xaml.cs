@@ -19,6 +19,14 @@ namespace THUVIENZ.Views
             this.DataContext = new RegisterViewModel();
         }
 
+        private void GenderRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            if (this.DataContext is RegisterViewModel vm && sender is RadioButton rb)
+            {
+                vm.Gender = rb.Content?.ToString() ?? "Khác";
+            }
+        }
+
         private void BtnBackToLogin_Click(object sender, MouseButtonEventArgs e)
         {
             new Login().Show();

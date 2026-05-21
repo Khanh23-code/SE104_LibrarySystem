@@ -14,6 +14,15 @@ namespace THUVIENZ.ViewModels
             set { _fullNameError = value; OnPropertyChanged(); }
         }
 
+        private string _gender = "Khác";
+        public string Gender
+        {
+            get => _gender;
+            set { _gender = value; OnPropertyChanged(); CommandManager.InvalidateRequerySuggested(); }
+        }
+
+        // Email/Phone/Address removed per spec
+
         private string _idError = string.Empty;
         public string IdError
         {
@@ -112,12 +121,14 @@ namespace THUVIENZ.ViewModels
         }
 
         public ICommand RegisterCommand { get; }
-        // private readonly AuthService _authService; // Uncomment khi bạn nối BLL
+        private readonly AuthService _authService;
 
         public RegisterViewModel()
         {
             // Khởi tạo các command nếu sau này team muốn chuyển hẳn sang MVVM thuần
-            RegisterCommand = new RelayCommand(ExecuteRegister, CanExecuteRegister);
+            _authService = new AuthService();
+            // Use async command to avoid blocking UI thread
+            RegisterCommand = new THUVIENZ.Commands.AsyncRelayCommand(ExecuteRegisterAsync, () => CanExecuteRegister(null));
         }
 
         /// <summary>
@@ -136,12 +147,33 @@ namespace THUVIENZ.ViewModels
             return true;
         }
 
-        private void ExecuteRegister(object? parameter)
+        private async System.Threading.Tasks.Task ExecuteRegisterAsync()
         {
-            // Code xử lý đăng ký thực tế (gọi BLL) sẽ nằm ở đây
-            // Vì CanExecuteRegister đã bắt hết lỗi, xuống tới đây dữ liệu chắc chắn đã sạch.
+            // Gọi BLL để đăng ký tài khoản và đưa vào trạng thái Pending (async)
+            try
+            {
+                var success = await _authService.RegisterAsync(Id, Password, "Reader", FullName, Gender).ConfigureAwait(false);
 
-            MessageBox.Show("Dữ liệu hợp lệ! Sẵn sàng đẩy xuống Database.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Marshal back to UI thread to show MessageBox
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (success)
+                    {
+                        MessageBox.Show("Đăng ký thành công. Tài khoản đang chờ admin duyệt.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Đăng ký thất bại: tài khoản đã tồn tại hoặc lỗi hệ thống.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                });
+            }
+            catch (System.Exception ex)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
         }
     }
 }

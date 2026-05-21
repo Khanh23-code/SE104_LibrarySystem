@@ -17,7 +17,8 @@
             <Setter Property="HeadersVisibility"    Value="Column"/>
             <Setter Property="GridLinesVisibility"  Value="None"/>
             <Setter Property="AutoGenerateColumns"  Value="False"/>
-            <Setter Property="IsReadOnly"           Value="True"/>
+            <!-- Allowed modifying CheckBoxes by setting IsReadOnly to False here, and True on specific text columns -->
+            <Setter Property="IsReadOnly"           Value="False"/>
             <Setter Property="SelectionMode"        Value="Extended"/>
             <Setter Property="SelectionUnit"        Value="FullRow"/>
             <Setter Property="FontSize"             Value="15"/>
@@ -129,16 +130,16 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="⚠️ " FontSize="16" VerticalAlignment="Center"/>
                             <StackPanel>
-                                <TextBlock FontSize="13" Foreground="#6B7280">
-                                    <Run Text="Sách quá hạn: "/>
-                                    <Run FontWeight="Bold" Foreground="#DC2626"
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontSize="13" Foreground="#6B7280" Text="Sách quá hạn: "/>
+                                    <TextBlock FontSize="13" FontWeight="Bold" Foreground="#DC2626"
                                          Text="{Binding OverdueCount, Mode=OneWay}"/>
-                                </TextBlock>
-                                <TextBlock FontSize="13" Foreground="#6B7280">
-                                    <Run Text="Tổng tiền phạt: "/>
-                                    <Run FontWeight="Bold" Foreground="#DC2626"
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontSize="13" Foreground="#6B7280" Text="Tổng tiền phạt: "/>
+                                    <TextBlock FontSize="13" FontWeight="Bold" Foreground="#DC2626"
                                          Text="{Binding TotalFineDisplay, Mode=OneWay}"/>
-                                </TextBlock>
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -162,18 +163,20 @@
                                   Margin="6"
                                   ItemsSource="{Binding MyBorrowedBooks}"
                                   VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Auto">
+                                  HorizontalScrollBarVisibility="Auto"
+                                  CanUserAddRows="False">
                             <DataGrid.Columns>
-
                                     <!-- Mã Phiếu -->
                                     <DataGridTextColumn Header="Mã Phiếu"
                                                         Binding="{Binding TicketID}"
+                                                        IsReadOnly="True"
                                                         Width="150" MinWidth="130"/>
 
                                     <!-- Tên Sách -->
                                     <DataGridTextColumn Header="Tên Sách"
                                                         Binding="{Binding BookTitle}"
-                                                        Width="*" MinWidth="250">
+                                                        IsReadOnly="True"
+                                                        Width="250" MinWidth="250">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="FontWeight" Value="SemiBold"/>
@@ -186,15 +189,17 @@
                                     <!-- Ngày Mượn -->
                                     <DataGridTextColumn Header="Ngày Mượn"
                                                         Binding="{Binding BorrowDate}"
+                                                        IsReadOnly="True"
                                                         Width="150" MinWidth="130"/>
 
                                     <!-- Hạn Trả -->
                                     <DataGridTextColumn Header="Hạn Trả"
                                                         Binding="{Binding DueDate}"
+                                                        IsReadOnly="True"
                                                         Width="150" MinWidth="130"/>
 
                                     <!-- Trạng Thái — colored badge -->
-                                    <DataGridTemplateColumn Header="Trạng Thái" Width="150" MinWidth="130">
+                                    <DataGridTemplateColumn Header="Trạng Thái" Width="150" MinWidth="130" IsReadOnly="True">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Background="{Binding Status, Converter={StaticResource StatusToBg}}"
@@ -209,11 +214,11 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
 
-                                    <!-- Hành Động -->
-                                    <DataGridTemplateColumn Header="Hành Động" Width="120">
+                                    <!-- Cột Hành động -->
+                                    <DataGridTemplateColumn Header="Hành động" Width="80">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                           HorizontalAlignment="Center" 
                                                           VerticalAlignment="Center">
                                                     <CheckBox.Style>

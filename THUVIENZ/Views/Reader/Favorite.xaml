@@ -55,7 +55,9 @@
                                                CoverImage="{Binding HinhAnh, TargetNullValue='/Assets/phai.png', FallbackValue='/Assets/phai.png'}"
                                                CommandParameter="{Binding}"
                                                LikeCommand="{Binding DataContext.RemoveFavoriteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                               BorrowCommand="{Binding DataContext.BorrowCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+                                               BorrowCommand="{Binding DataContext.BorrowCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                               BorrowEnabled="{Binding IsBorrowEnabled}"
+                                               BorrowButtonText="{Binding BorrowButtonText}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

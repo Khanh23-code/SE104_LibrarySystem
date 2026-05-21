@@ -28,5 +28,16 @@ namespace THUVIENZ.Views.Components
         {
             InitializeComponent();
         }
+
+        private void SearchBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                if (SearchCommand != null && SearchCommand.CanExecute(null))
+                {
+                    SearchCommand.Execute(null);
+                }
+            }
+        }
     }
 }

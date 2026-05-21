@@ -17,6 +17,14 @@ namespace THUVIENZ
         private void ApplyRouting()
         {
             string role = UserSession.Role ?? "";
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                // Chưa đăng nhập: chuyển về Login mà không hiện thông báo lỗi phân quyền
+                new Login().Show();
+                this.Close();
+                return;
+            }
+
             string checkRole = role.ToUpper();
 
             // Nếu Backend trả về Role là "ADMIN" hoặc "QUANLY" (bạn tự chỉnh cho khớp chữ DB nhé)

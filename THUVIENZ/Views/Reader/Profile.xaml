@@ -25,7 +25,7 @@
                         <TextBlock Text="Quản lý thông tin cá nhân và liên hệ của bạn" FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
                     </StackPanel>
 
-                    <Ellipse HorizontalAlignment="Right" Width="90" Height="90" Stroke="#E5E7EB" StrokeThickness="3">
+                    <Ellipse x:Name="AvatarEllipse" HorizontalAlignment="Right" Width="90" Height="90" Stroke="#E5E7EB" StrokeThickness="3" Cursor="Hand" MouseLeftButtonDown="AvatarEllipse_MouseLeftButtonDown">
                         <Ellipse.Effect>
                             <DropShadowEffect BlurRadius="15" Opacity="0.2" ShadowDepth="5"/>
                         </Ellipse.Effect>
@@ -67,7 +67,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Button Grid.Row="2" Content="Lưu Thay Đổi" Foreground="White" FontSize="20" FontWeight="Bold" Width="220" Height="60" Cursor="Hand" HorizontalAlignment="Right">
+                <Button Grid.Row="2" Content="Lưu Thay Đổi" Foreground="White" FontSize="20" FontWeight="Bold" Width="220" Height="60" Cursor="Hand" HorizontalAlignment="Right" Command="{Binding SaveCommand}">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}">
                             <Setter Property="Background" Value="#00E676"/>

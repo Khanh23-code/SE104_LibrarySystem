@@ -25,8 +25,8 @@
                     </TextBlock.Style>
                 </TextBlock>
 
-                <TextBox Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}" 
-                         Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="20,0" Foreground="#111827"/>
+                <TextBox x:Name="PART_SearchBox" Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}"
+                         Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="20,0" Foreground="#111827" KeyDown="SearchBox_KeyDown"/>
             </Grid>
         </Border>
 
