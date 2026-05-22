@@ -7,5 +7,7 @@ namespace THUVIENZ.Core
     {
         public static string? UserID { get; set; }
         public static string? Role { get; set; }
+
+        public static Action? UserLoggedIn;
     }
 }

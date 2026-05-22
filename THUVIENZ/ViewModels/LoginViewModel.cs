@@ -97,7 +97,17 @@ namespace THUVIENZ.ViewModels
 
                 if (result == "PENDING_OR_LOCKED")
                 {
-                    MessageBox.Show("Tài khoản đang chờ duyệt hoặc bị khóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    // Nếu đang Pending, cố gắng hiển thị thông tin hồ sơ người dùng đã nhập khi đăng ký
+                    var pendingProfile = await _authService.GetPendingProfileAsync(Id);
+                    if (pendingProfile != null)
+                    {
+                        string info = $"Tên: {pendingProfile.HoTen}\nĐịa chỉ: {pendingProfile.DiaChi}\nGiới tính: {pendingProfile.GioiTinh}\nEmail: {pendingProfile.Email}\nSĐT: {pendingProfile.SoDienThoai}";
+                        MessageBox.Show($"Tài khoản của bạn đang chờ duyệt. Thông tin đã gửi:\n\n{info}", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Tài khoản đang chờ duyệt hoặc bị khóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
                 }
                 else if (result != null)
                 {
@@ -113,6 +123,7 @@ namespace THUVIENZ.ViewModels
                         MessageBoxImage.Information);
 
                     OnLoginSuccess?.Invoke();
+                    UserSession.UserLoggedIn?.Invoke();
                 }
                 else
                 {

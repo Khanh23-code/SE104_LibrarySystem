@@ -34,6 +34,19 @@ namespace THUVIENZ.BLL
         }
 
         /// <summary>
+        /// Cập nhật thông tin độc giả và lưu vào database.
+        /// Trả về true nếu cập nhật thành công.
+        /// </summary>
+        public async Task<bool> UpdateReaderAsync(DocGia reader)
+        {
+            if (reader == null) return false;
+
+            _docGiaRepository.Update(reader);
+            await _docGiaRepository.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
         /// Lấy danh sách sách đang mượn của Độc giả.
         /// </summary>
         public async Task<IEnumerable<Sach>> GetActiveBorrowedBooksAsync(int maDocGia)

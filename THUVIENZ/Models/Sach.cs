@@ -186,6 +186,21 @@ namespace THUVIENZ.Models
         // THUỘC TÍNH KHÔNG ÁNH XẠ VÀO DB (CHỈ DÙNG CHO UI BINDING TRÊN WPF)
         // ====================================================================
 
+        private bool _isFavorite;
+        /// <summary>
+        /// Trạng thái yêu thích của sách đối với người dùng hiện tại (NotMapped).
+        /// </summary>
+        [NotMapped]
+        public bool IsFavorite
+        {
+            get => _isFavorite;
+            set
+            {
+                _isFavorite = value;
+                OnPropertyChanged();
+            }
+        }
+
         private int _soLuong = 1;
         /// <summary>
         /// Số lượng bản sao (Thuộc tính NotMapped, hỗ trợ UI binding nhập liệu).

@@ -1,49 +1,94 @@
 <UserControl x:Class="THUVIENZ.Views.Borrowing"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:THUVIENZ">
+        xmlns:local="clr-namespace:THUVIENZ"
+        xmlns:converters="clr-namespace:THUVIENZ.Converters">
 
     <UserControl.Resources>
+        <!-- Status badge converters -->
+        <converters:StatusToBadgeBackgroundConverter  x:Key="StatusToBg"/>
+        <converters:StatusToBadgeForegroundConverter  x:Key="StatusToFg"/>
+
         <Style x:Key="ModernDataGrid" TargetType="DataGrid">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="RowBackground" Value="White"/>
+            <Setter Property="Background"           Value="Transparent"/>
+            <Setter Property="BorderThickness"      Value="0"/>
+            <Setter Property="RowBackground"        Value="White"/>
             <Setter Property="AlternatingRowBackground" Value="#F9FAFB"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-            <Setter Property="GridLinesVisibility" Value="None"/>
-            <Setter Property="AutoGenerateColumns" Value="False"/>
-            <Setter Property="IsReadOnly" Value="True"/>
-            <Setter Property="SelectionMode" Value="Single"/>
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="HeadersVisibility"    Value="Column"/>
+            <Setter Property="GridLinesVisibility"  Value="None"/>
+            <Setter Property="AutoGenerateColumns"  Value="False"/>
+            <!-- Allowed modifying CheckBoxes by setting IsReadOnly to False here, and True on specific text columns -->
+            <Setter Property="IsReadOnly"           Value="False"/>
+            <Setter Property="SelectionMode"        Value="Extended"/>
+            <Setter Property="SelectionUnit"        Value="FullRow"/>
+            <Setter Property="FontSize"             Value="15"/>
+            <Setter Property="CanUserResizeRows"    Value="False"/>
+            <!-- Add neat UI spacing -->
+            <Setter Property="RowHeight"            Value="60"/>
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#F3F4F6"/>
-            <Setter Property="Foreground" Value="#6B7280"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="Background"     Value="#F3F4F6"/>
+            <Setter Property="Foreground"     Value="#6B7280"/>
+            <Setter Property="FontWeight"     Value="Bold"/>
+            <Setter Property="Padding"        Value="15,16"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="BorderBrush"    Value="#E5E7EB"/>
         </Style>
 
         <Style TargetType="DataGridRow">
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="BorderBrush" Value="#F3F4F6"/>
-            <Setter Property="Padding" Value="0,10"/>
+            <Setter Property="BorderBrush"     Value="#F3F4F6"/>
+            <!-- Remove highlight when row is clicked/selected -->
             <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderBrush" Value="#F3F4F6"/>
+                </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F3F4F6"/>
+                    <Setter Property="Background" Value="#EFF6FF"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style TargetType="DataGridCell">
-            <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
-                        <Border Padding="{TemplateBinding Padding}" Background="Transparent">
+                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
                             <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!-- Remove highlight when cell is selected -->
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="Black"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Action button base style -->
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="FontWeight"     Value="SemiBold"/>
+            <Setter Property="FontSize"       Value="13"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"         Value="Hand"/>
+            <Setter Property="Padding"        Value="14,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -53,100 +98,164 @@
 
     <Grid>
         <Border Background="White" CornerRadius="35"
-                HorizontalAlignment="Center" VerticalAlignment="Center" 
-                MinWidth="900" MaxWidth="1000" Height="620">
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                Margin="20">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="30" Opacity="0.2" ShadowDepth="10" Color="Black"/>
+                <DropShadowEffect BlurRadius="30" Opacity="0.12" ShadowDepth="8" Color="Black"/>
             </Border.Effect>
 
-            <Grid Margin="60,50,60,50">
+            <Grid Margin="50,40,50,40">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>  <!-- Header -->
+                    <RowDefinition Height="*"/>     <!-- Table -->
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Margin="0,0,0,30">
-                    <TextBlock Text="Sách Đang Mượn &amp; Vi Phạm" FontSize="36" FontWeight="Bold" Foreground="#111827"/>
-                    <TextBlock Text="Theo dõi trạng thái sách và thanh toán các khoản phạt nếu có" FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
-                </StackPanel>
+                <!-- ── Header ── -->
+                <Grid Grid.Row="0" Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <Border Grid.Row="1" Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="2" CornerRadius="20" Padding="25" Margin="0,0,0,30">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="3"/>
-                    </Border.Effect>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="📚 Sách Đang Mượn" FontSize="32" FontWeight="Bold" Foreground="#111827"/>
+                        <TextBlock Text="Danh sách toàn bộ sách bạn đã và đang mượn từ thư viện"
+                                   FontSize="15" Foreground="#6B7280" Margin="0,4,0,0"/>
+                    </StackPanel>
 
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="⚠️ Phiếu Thu Tiền Phạt Quá Hạn" FontSize="22" FontWeight="Bold" Foreground="#DC2626" Margin="0,0,0,10"/>
-                            <TextBlock Text="Sách: Cấu trúc dữ liệu và thuật toán" FontSize="18" Foreground="#4B5563" Margin="0,0,0,5"/>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Số ngày trễ: " FontSize="18" Foreground="#4B5563"/>
-                                <TextBlock Text="5 ngày" FontSize="18" FontWeight="Bold" Foreground="#111827" Margin="0,0,20,0"/>
-                                <TextBlock Text="Tổng tiền phạt: " FontSize="18" Foreground="#4B5563"/>
-                                <TextBlock Text="50.000 VNĐ" FontSize="22" FontWeight="Bold" Foreground="#DC2626"/>
+                    <!-- Live overdue badge -->
+                    <Border Grid.Column="1" VerticalAlignment="Center"
+                            Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1.5"
+                            CornerRadius="12" Padding="18,10">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚠️ " FontSize="16" VerticalAlignment="Center"/>
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontSize="13" Foreground="#6B7280" Text="Sách quá hạn: "/>
+                                    <TextBlock FontSize="13" FontWeight="Bold" Foreground="#DC2626"
+                                         Text="{Binding OverdueCount, Mode=OneWay}"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontSize="13" Foreground="#6B7280" Text="Tổng tiền phạt: "/>
+                                    <TextBlock FontSize="13" FontWeight="Bold" Foreground="#DC2626"
+                                         Text="{Binding TotalFineDisplay, Mode=OneWay}"/>
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
+                    </Border>
+                </Grid>
 
-                        <Button Grid.Column="1" Content="Thanh toán ngay" Width="200" Height="55" Foreground="White" FontSize="18" FontWeight="Bold" Cursor="Hand" VerticalAlignment="Center">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="#10B981"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="15">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <!-- ── DataGrid ── -->
+                <Border Grid.Row="1" Background="White" CornerRadius="16"
+                        BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" Opacity="0.06" ShadowDepth="2"/>
+                    </Border.Effect>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <DataGrid Grid.Row="0"
+                                  Style="{StaticResource ModernDataGrid}"
+                                  Margin="6"
+                                  ItemsSource="{Binding MyBorrowedBooks}"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                    <!-- Mã Phiếu -->
+                                    <DataGridTextColumn Header="Mã Phiếu"
+                                                        Binding="{Binding TicketID}"
+                                                        IsReadOnly="True"
+                                                        Width="150" MinWidth="130"/>
+
+                                    <!-- Tên Sách -->
+                                    <DataGridTextColumn Header="Tên Sách"
+                                                        Binding="{Binding BookTitle}"
+                                                        IsReadOnly="True"
+                                                        Width="250" MinWidth="250">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Foreground" Value="#111827"/>
+                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <!-- Ngày Mượn -->
+                                    <DataGridTextColumn Header="Ngày Mượn"
+                                                        Binding="{Binding BorrowDate}"
+                                                        IsReadOnly="True"
+                                                        Width="150" MinWidth="130"/>
+
+                                    <!-- Hạn Trả -->
+                                    <DataGridTextColumn Header="Hạn Trả"
+                                                        Binding="{Binding DueDate}"
+                                                        IsReadOnly="True"
+                                                        Width="150" MinWidth="130"/>
+
+                                    <!-- Trạng Thái — colored badge -->
+                                    <DataGridTemplateColumn Header="Trạng Thái" Width="150" MinWidth="130" IsReadOnly="True">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{Binding Status, Converter={StaticResource StatusToBg}}"
+                                                        CornerRadius="20" Padding="12,6"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               Foreground="{Binding Status, Converter={StaticResource StatusToFg}}"
+                                                               FontWeight="SemiBold" FontSize="13"
+                                                               HorizontalAlignment="Center"/>
                                                 </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#059669"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Cột Hành động -->
+                                    <DataGridTemplateColumn Header="Hành động" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                          HorizontalAlignment="Center" 
+                                                          VerticalAlignment="Center">
+                                                    <CheckBox.Style>
+                                                        <Style TargetType="CheckBox">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Đã trả">
+                                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </CheckBox.Style>
+                                                </CheckBox>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                            </DataGrid.Columns>
+                                </DataGrid>
+
+                        <!-- Actions bar -->
+                        <Border Grid.Row="1" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="20">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="⏱ Gia hạn đã chọn"
+                                        Margin="0,0,12,0"
+                                        Command="{Binding GiaHanCommand}"
+                                        Style="{StaticResource ActionBtn}"
+                                        Background="#EFF6FF" Foreground="#2563EB"/>
+
+                                <Button Content="↩ Trả sách đã chọn"
+                                        Command="{Binding TraSachCommand}"
+                                        Style="{StaticResource ActionBtn}"
+                                        Background="#FEF2F2" Foreground="#DC2626"/>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </Border>
 
-                <Border Grid.Row="2" Background="White" CornerRadius="20" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2"/>
-                    </Border.Effect>
-
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Mã Phiếu" Binding="{Binding TicketID}" Width="120"/>
-                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding BookTitle}" Width="*"/>
-                                <DataGridTextColumn Header="Ngày Mượn" Binding="{Binding BorrowDate}" Width="150"/>
-                                <DataGridTextColumn Header="Hạn Trả" Binding="{Binding DueDate}" Width="150"/>
-                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding Status}" Width="150"/>
-
-                                <DataGridTemplateColumn Header="Hành Động" Width="120">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Button Content="Gia hạn" Background="#EFF6FF" Foreground="#2563EB" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="15,8">
-                                                <Button.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="8"/>
-                                                    </Style>
-                                                </Button.Resources>
-                                            </Button>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </ScrollViewer>
-                </Border>
             </Grid>
         </Border>
     </Grid>

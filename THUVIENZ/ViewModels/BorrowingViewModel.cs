@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -15,14 +16,27 @@ namespace THUVIENZ.ViewModels
     /// <summary>
     /// Lớp hỗ trợ hiển thị danh sách sách đang mượn của cá nhân trên giao diện Borrowing.xaml.
     /// </summary>
-    public class MyBorrowedBookItem
+    public class MyBorrowedBookItem : ObservableObject
     {
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                _isSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string TicketID { get; set; } = string.Empty;
         public string BookTitle { get; set; } = string.Empty;
         public string BorrowDate { get; set; } = string.Empty;
         public string DueDate { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
     }
+
+
 
     /// <summary>
     /// ViewModel xử lý logic mượn sách vật lý tại Kiosk/Quầy tự phục vụ.
@@ -82,11 +96,22 @@ namespace THUVIENZ.ViewModels
             {
                 _myBorrowedBooks = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(OverdueCount));
+                OnPropertyChanged(nameof(TotalFineDisplay));
             }
         }
 
+        /// <summary>Số sách quá hạn chưa trả.</summary>
+        public int OverdueCount => _myBorrowedBooks.Count(b => b.Status == "Quá hạn");
+
+        /// <summary>Tổng tiền phạt ước tính (hiển thị số cuốn quá hạn).</summary>
+        public string TotalFineDisplay =>
+            OverdueCount == 0 ? "0 VNĐ" : $"{OverdueCount} cuốn cần thanh toán";
+
         public ICommand AddToCartCommand { get; }
         public ICommand CheckoutCommand { get; }
+        public ICommand GiaHanCommand { get; }
+        public ICommand TraSachCommand { get; }
 
         private readonly MuonTraService _muonTraService;
         private readonly LmsDbContext _context;
@@ -98,6 +123,83 @@ namespace THUVIENZ.ViewModels
 
             AddToCartCommand = new RelayCommand(_ => ExecuteAddToCart());
             CheckoutCommand = new RelayCommand(_ => ExecuteCheckout());
+            GiaHanCommand = new RelayCommand(_ => _ = ExecuteGiaHanSelectedAsync());
+            TraSachCommand = new RelayCommand(_ => _ = ExecuteTraSachSelectedAsync());
+        }
+
+        private async Task ExecuteGiaHanSelectedAsync()
+        {
+            var selectedItems = MyBorrowedBooks.Where(x => x.IsSelected).ToList();
+            if (!selectedItems.Any())
+            {
+                MessageBox.Show("Vui lòng chọn ít nhất một cuốn sách để gia hạn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            int successCount = 0;
+            string errors = "";
+
+            foreach (var item in selectedItems)
+            {
+                var parts = item.TicketID?.Split('-');
+                if (parts == null || parts.Length < 3 || !int.TryParse(parts[2], out int maCuonSach)) continue;
+
+                try
+                {
+                    bool ok = await _muonTraService.GiaHanSachAsync(maCuonSach);
+                    if (ok) successCount++;
+                }
+                catch (Exception ex)
+                {
+                    errors += $"- {item.BookTitle}: {ex.Message}\n";
+                }
+            }
+
+            string msg = $"Đã gia hạn thành công {successCount}/{selectedItems.Count} cuốn sách.";
+            if (!string.IsNullOrEmpty(errors))
+            {
+                msg += $"\n\nLỗi:\n{errors}";
+            }
+
+            MessageBox.Show(msg, "Kết quả gia hạn", MessageBoxButton.OK, successCount > 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            LoadMyBorrowedBooks();
+        }
+
+        private async Task ExecuteTraSachSelectedAsync()
+        {
+            var selectedItems = MyBorrowedBooks.Where(x => x.IsSelected).ToList();
+            if (!selectedItems.Any())
+            {
+                MessageBox.Show("Vui lòng chọn ít nhất một cuốn sách để trả.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            int successCount = 0;
+            string messages = "";
+
+            foreach (var item in selectedItems)
+            {
+                var parts = item.TicketID?.Split('-');
+                if (parts == null || parts.Length < 3 || !int.TryParse(parts[2], out int maCuonSach)) continue;
+
+                try
+                {
+                    var result = await _muonTraService.ThucHienTraSachAsync(maCuonSach);
+                    if (result.ThanhCong)
+                    {
+                        successCount++;
+                        messages += $"- {item.BookTitle}: {result.ThongBao}\n";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    messages += $"- {item.BookTitle} (Lỗi): {ex.Message}\n";
+                }
+            }
+
+            string msg = $"Đã trả thành công {successCount}/{selectedItems.Count} cuốn sách.\n\nChi tiết:\n{messages}";
+            MessageBox.Show(msg, "Kết quả trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
+            LoadMyBorrowedBooks();
         }
 
         /// <summary>
@@ -110,7 +212,6 @@ namespace THUVIENZ.ViewModels
                 MyBorrowedBooks.Clear();
                 return;
             }
-
             try
             {
                 var list = await _context.ChiTietMuonTras

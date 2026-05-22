@@ -66,8 +66,8 @@
                 </TextBlock>
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="❤" FontSize="18" Foreground="#FF4C4C" Background="#FEE2E2" BorderBrush="Transparent" Width="40" Height="40" Margin="0,0,10,0" Style="{StaticResource CardBtn}" ToolTip="Bỏ yêu thích"/>
-                    <Button Content="Mượn ngay" FontSize="14" Foreground="White" Background="#4285F4" BorderBrush="Transparent" Width="100" Height="40" Style="{StaticResource CardBtn}">
+                    <Button Content="❤" FontSize="18" Foreground="#FF4C4C" Background="#FEE2E2" BorderBrush="Transparent" Width="40" Height="40" Margin="0,0,10,0" Style="{StaticResource CardBtn}" ToolTip="Bỏ yêu thích" Command="{Binding LikeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding CommandParameter, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    <Button Content="{Binding BorrowButtonText, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="14" Foreground="White" Background="#4285F4" BorderBrush="Transparent" Width="100" Height="40" Style="{StaticResource CardBtn}" Command="{Binding BorrowCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding CommandParameter, RelativeSource={RelativeSource AncestorType=UserControl}}" IsEnabled="{Binding BorrowEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <Button.Triggers>
                             <EventTrigger RoutedEvent="MouseEnter">
                                 <BeginStoryboard>

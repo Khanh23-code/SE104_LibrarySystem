@@ -25,12 +25,12 @@
                     </TextBlock.Style>
                 </TextBlock>
 
-                <TextBox Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}" 
-                         Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="20,0" Foreground="#111827"/>
+                <TextBox x:Name="PART_SearchBox" Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=UserControl}, UpdateSourceTrigger=PropertyChanged}"
+                         Background="Transparent" BorderThickness="0" FontSize="18" VerticalContentAlignment="Center" Padding="20,0" Foreground="#111827" KeyDown="SearchBox_KeyDown"/>
             </Grid>
         </Border>
 
-        <Button Grid.Column="1" Content="Tìm kiếm" Width="150" Height="60" Foreground="White" FontSize="18" FontWeight="Bold" Cursor="Hand">
+        <Button Grid.Column="1" Content="Tìm kiếm" Width="150" Height="60" Foreground="White" FontSize="18" FontWeight="Bold" Cursor="Hand" Command="{Binding SearchCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
             <Button.Style>
                 <Style TargetType="Button">
                     <Setter Property="Background" Value="#4285F4"/>

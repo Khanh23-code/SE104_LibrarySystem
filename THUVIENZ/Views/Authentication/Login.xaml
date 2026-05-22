@@ -10,6 +10,10 @@
         <vm:LoginViewModel/>
     </Window.DataContext>
 
+    <Window.InputBindings>
+        <KeyBinding Key="Enter" Command="{Binding LoginCommand}" />
+    </Window.InputBindings>
+
     <Window.Background>
         <ImageBrush ImageSource="pack://application:,,,/Assets/Images/Background.jpg" Stretch="UniformToFill"/>
     </Window.Background>

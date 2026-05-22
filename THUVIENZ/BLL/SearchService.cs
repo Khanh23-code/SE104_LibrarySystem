@@ -33,6 +33,7 @@ namespace THUVIENZ.BLL
             
             return await _context.Sachs
                 .AsNoTracking()
+                .Include(s => s.TheLoaiSach)
                 .Where(s => s.TenSach.Contains(cleanKeyword) || (s.TacGia != null && s.TacGia.Contains(cleanKeyword)))
                 .ToListAsync();
         }

@@ -55,6 +55,56 @@ namespace THUVIENZ.Views.Components
             set { SetValue(CoverImageProperty, value); }
         }
 
+        // 6. Like Command
+        public static readonly DependencyProperty LikeCommandProperty =
+            DependencyProperty.Register("LikeCommand", typeof(System.Windows.Input.ICommand), typeof(BookCard));
+
+        public System.Windows.Input.ICommand LikeCommand
+        {
+            get { return (System.Windows.Input.ICommand)GetValue(LikeCommandProperty); }
+            set { SetValue(LikeCommandProperty, value); }
+        }
+
+        // 7. Borrow Command
+        public static readonly DependencyProperty BorrowCommandProperty =
+            DependencyProperty.Register("BorrowCommand", typeof(System.Windows.Input.ICommand), typeof(BookCard));
+
+        public System.Windows.Input.ICommand BorrowCommand
+        {
+            get { return (System.Windows.Input.ICommand)GetValue(BorrowCommandProperty); }
+            set { SetValue(BorrowCommandProperty, value); }
+        }
+
+        // 9. Borrow Enabled
+        public static readonly DependencyProperty BorrowEnabledProperty =
+            DependencyProperty.Register("BorrowEnabled", typeof(bool), typeof(BookCard), new PropertyMetadata(true));
+
+        public bool BorrowEnabled
+        {
+            get { return (bool)GetValue(BorrowEnabledProperty); }
+            set { SetValue(BorrowEnabledProperty, value); }
+        }
+
+        // 10. Borrow Button Text
+        public static readonly DependencyProperty BorrowButtonTextProperty =
+            DependencyProperty.Register("BorrowButtonText", typeof(string), typeof(BookCard), new PropertyMetadata("Mượn ngay"));
+
+        public string BorrowButtonText
+        {
+            get { return (string)GetValue(BorrowButtonTextProperty); }
+            set { SetValue(BorrowButtonTextProperty, value); }
+        }
+
+        // 8. Command Parameter
+        public static readonly DependencyProperty CommandParameterProperty =
+            DependencyProperty.Register("CommandParameter", typeof(object), typeof(BookCard));
+
+        public object CommandParameter
+        {
+            get { return (object)GetValue(CommandParameterProperty); }
+            set { SetValue(CommandParameterProperty, value); }
+        }
+
         public BookCard()
         {
             InitializeComponent();
