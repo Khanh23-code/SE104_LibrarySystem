@@ -200,41 +200,22 @@ namespace THUVIENZ.ViewModels
                 return;
             }
 
-            // Find an available physical copy for this MaSach
-            var cuonSach = await context.CuonSachs.FirstOrDefaultAsync(c => c.MaSach == sach.MaSach && c.TinhTrang == "Sẵn sàng");
-            if (cuonSach == null)
-            {
-                MessageBox.Show("Hiện không có bản sao sẵn sàng để mượn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             try
             {
-                var success = await _muonTraService.ThucHienMuonSachAsync(docGia.MaDocGia, new System.Collections.Generic.List<int> { cuonSach.MaCuonSach });
+                var requestService = new THUVIENZ.BLL.RequestService();
+                var success = await requestService.AddRequestAsync(docGia.MaDocGia, sach.MaSach);
                 if (success)
                 {
-                    // Remove any pending request entries for this user/book since we completed the loan
-                    var pending = await context.YeuCauMuons
-                        .Where(y => y.MaDocGia == docGia.MaDocGia && y.MaSach == sach.MaSach && y.TrangThai == "Pending")
-                        .ToListAsync();
-                    if (pending.Any())
-                    {
-                        context.YeuCauMuons.RemoveRange(pending);
-                        await context.SaveChangesAsync();
-                    }
-
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        sach.IsBorrowEnabled = false;
-                        sach.BorrowButtonText = "Đã mượn";
-                    });
-
-                    MessageBox.Show("Mượn sách thành công.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Mượn sách thành công! Yêu cầu đang chờ duyệt.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Sách này đã có trong danh sách yêu cầu mượn của bạn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Không thể mượn sách: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Không thể yêu cầu mượn sách: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
