@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="THUVIENZ.Views.Profile"
+<UserControl x:Class="THUVIENZ.Views.Profile"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:THUVIENZ">
@@ -30,7 +30,7 @@
                             <DropShadowEffect BlurRadius="15" Opacity="0.2" ShadowDepth="5"/>
                         </Ellipse.Effect>
                         <Ellipse.Fill>
-                            <ImageBrush ImageSource="{Binding CurrentReader.AnhDaiDien, TargetNullValue='/Assets/phai.png', FallbackValue='/Assets/phai.png'}" Stretch="UniformToFill"/>
+                            <ImageBrush ImageSource="{Binding CurrentReader.AvatarSource, TargetNullValue='/Assets/phai.png', FallbackValue='/Assets/phai.png'}" Stretch="UniformToFill"/>
                         </Ellipse.Fill>
                     </Ellipse>
                 </Grid>

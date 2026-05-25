@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace THUVIENZ.Views.Components
@@ -47,11 +47,11 @@ namespace THUVIENZ.Views.Components
 
         // 5. Ảnh bìa
         public static readonly DependencyProperty CoverImageProperty =
-            DependencyProperty.Register("CoverImage", typeof(string), typeof(BookCard), new PropertyMetadata(""));
+            DependencyProperty.Register("CoverImage", typeof(object), typeof(BookCard), new PropertyMetadata(null));
 
-        public string CoverImage
+        public object CoverImage
         {
-            get { return (string)GetValue(CoverImageProperty); }
+            get { return GetValue(CoverImageProperty); }
             set { SetValue(CoverImageProperty, value); }
         }
 

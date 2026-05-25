@@ -227,6 +227,9 @@
                                                                 <DataTrigger Binding="{Binding Status}" Value="Đã trả">
                                                                     <Setter Property="IsEnabled" Value="False"/>
                                                                 </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Đang phê duyệt">
+                                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                                </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
                                                     </CheckBox.Style>

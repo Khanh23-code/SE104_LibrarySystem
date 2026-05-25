@@ -67,13 +67,11 @@ namespace THUVIENZ.ViewModels
         public ICommand ReturnBookCommand { get; }
 
         private readonly MuonTraService _muonTraService;
-        private readonly LmsDbContext _context;
-
+ 
         public ReturnViewModel()
         {
             _muonTraService = new MuonTraService();
-            _context = new LmsDbContext();
-
+ 
             SearchCommand = new RelayCommand(_ => ExecuteSearch());
             ReturnBookCommand = new RelayCommand(_ => ExecuteReturn());
         }
@@ -87,7 +85,8 @@ namespace THUVIENZ.ViewModels
             {
                 try
                 {
-                    var rawBooks = await _context.ChiTietMuonTras
+                    using var context = new LmsDbContext();
+                    var rawBooks = await context.ChiTietMuonTras
                         .Include(c => c.PhieuMuon)
                         .Include(c => c.CuonSach)
                         .ThenInclude(cs => cs!.Sach)

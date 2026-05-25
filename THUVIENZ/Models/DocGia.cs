@@ -165,17 +165,50 @@ namespace THUVIENZ.Models
             }
         }
 
-        private string? _anhDaiDien;
+        private byte[]? _anhDaiDien;
         /// <summary>
-        /// Ảnh đại diện của độc giả.
+        /// Ảnh đại diện của độc giả lưu dạng nhị phân.
         /// </summary>
-        public string? AnhDaiDien
+        public byte[]? AnhDaiDien
         {
             get => _anhDaiDien;
             set
             {
                 _anhDaiDien = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(AvatarSource));
+            }
+        }
+
+        /// <summary>
+        /// Đối tượng ImageSource phục vụ hiển thị ảnh đại diện trên UI WPF.
+        /// </summary>
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public System.Windows.Media.ImageSource? AvatarSource
+        {
+            get
+            {
+                if (AnhDaiDien == null || AnhDaiDien.Length == 0) return null;
+                try
+                {
+                    var image = new System.Windows.Media.Imaging.BitmapImage();
+                    using (var mem = new System.IO.MemoryStream(AnhDaiDien))
+                    {
+                        mem.Position = 0;
+                        image.BeginInit();
+                        image.CreateOptions = System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat;
+                        image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                        image.UriSource = null;
+                        image.StreamSource = mem;
+                        image.EndInit();
+                    }
+                    image.Freeze();
+                    return image;
+                }
+                catch
+                {
+                    return null;
+                }
             }
         }
 

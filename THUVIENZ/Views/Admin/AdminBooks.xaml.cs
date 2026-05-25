@@ -77,18 +77,21 @@ namespace THUVIENZ.Views
                 if (int.TryParse(newBook.Category, out int catId))
                     sach.MaTheLoai = catId;
 
-                await service.AddBookAsync(sach);
-
                 if (!string.IsNullOrEmpty(newBook.ImagePath) && System.IO.File.Exists(newBook.ImagePath))
                 {
-                    using (var stream = new System.IO.FileStream(newBook.ImagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                    try
                     {
-                        string ext = System.IO.Path.GetExtension(newBook.ImagePath);
-                        await service.UploadBookCoverAsync(sach.MaSach, stream, ext);
+                        sach.HinhAnh = System.IO.File.ReadAllBytes(newBook.ImagePath);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Lỗi đọc file ảnh bìa: {ex.Message}");
                     }
                 }
 
-                MessageBox.Show("Thêm sách và tải ảnh bìa thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                await service.AddBookAsync(sach);
+
+                MessageBox.Show("Thêm sách mới thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                 _viewModel.LoadBooksCommand.Execute(null);
             }
             catch (System.Exception ex)

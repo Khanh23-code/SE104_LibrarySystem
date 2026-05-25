@@ -81,32 +81,29 @@ namespace THUVIENZ.Views.Popups
             tbImageName.Text = "Chọn ảnh mới (Tùy chọn)...";
 
             // Nạp lại ảnh bìa đã thiết lập từ trước (nếu có)
-            if (!string.IsNullOrEmpty(book.HinhAnh))
+            if (book.HinhAnh != null && book.HinhAnh.Length > 0)
             {
-                // Có thể là đường dẫn tuyệt đối hoặc tên file trong thư mục Assets/Images
-                string fullPath = book.HinhAnh;
-                if (!Path.IsPathRooted(fullPath))
+                try
                 {
-                    fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", book.HinhAnh);
-                }
-
-                if (File.Exists(fullPath))
-                {
-                    try
+                    var bitmap = new BitmapImage();
+                    using (var mem = new MemoryStream(book.HinhAnh))
                     {
-                        var bitmap = new BitmapImage();
+                        mem.Position = 0;
                         bitmap.BeginInit();
-                        bitmap.UriSource = new Uri(fullPath);
+                        bitmap.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
                         bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.UriSource = null;
+                        bitmap.StreamSource = mem;
                         bitmap.EndInit();
-
-                        imgPreview.Source = bitmap;
-                        spPlaceholder.Visibility = Visibility.Collapsed;
-                        tbImageName.Text = Path.GetFileName(fullPath);
-                        _selectedImagePath = fullPath;
                     }
-                    catch { }
+                    bitmap.Freeze();
+
+                    imgPreview.Source = bitmap;
+                    spPlaceholder.Visibility = Visibility.Collapsed;
+                    tbImageName.Text = "Ảnh bìa đã lưu";
+                    _selectedImagePath = null;
                 }
+                catch { }
             }
         }
 
@@ -204,23 +201,16 @@ namespace THUVIENZ.Views.Popups
                     _editTargetBook.TriGia = pEdit;
                 _editTargetBook.MoTa = txtDescription.Text.Trim();
 
-                // Nếu có file ảnh bìa được chọn/đổi, thực hiện upload trước
+                // Nếu có file ảnh bìa được chọn/đổi, thực hiện đọc byte[]
                 if (!string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath))
                 {
-                    // Nếu đường dẫn file khác với hình ảnh hiện tại
-                    if (_editTargetBook.HinhAnh != _selectedImagePath)
+                    try
                     {
-                        try
-                        {
-                            var service = new THUVIENZ.BLL.BookManagementService();
-                            using (var stream = new FileStream(_selectedImagePath, FileMode.Open, FileAccess.Read))
-                            {
-                                string ext = Path.GetExtension(_selectedImagePath);
-                                string newFileName = await service.UploadBookCoverAsync(_editTargetBook.MaSach, stream, ext, false);
-                                _editTargetBook.HinhAnh = newFileName;
-                            }
-                        }
-                        catch { }
+                        _editTargetBook.HinhAnh = File.ReadAllBytes(_selectedImagePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Lỗi đọc file ảnh: {ex.Message}");
                     }
                 }
 

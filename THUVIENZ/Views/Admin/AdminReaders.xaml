@@ -164,7 +164,7 @@
                                 <comp:ReaderCard ReaderName="{Binding HoTen}" ReaderId="{Binding MaDocGia}" 
                                                   Address="{Binding DiaChi}" Gender="{Binding GioiTinh}" 
                                                   Email="{Binding Email}" Phone="{Binding SoDienThoai}" 
-                                                  AvatarSource="/Assets/phai.png" 
+                                                  AvatarSource="{Binding AvatarSource, TargetNullValue='/Assets/phai.png', FallbackValue='/Assets/phai.png'}" 
                                                   SuspendButtonVisibility="{Binding DataContext.IsActiveTabVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   SuspendCommand="{Binding OpenSuspendPopupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   SuspendCommandParameter="{Binding}"

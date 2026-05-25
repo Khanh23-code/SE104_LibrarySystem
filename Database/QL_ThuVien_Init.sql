@@ -50,7 +50,7 @@ CREATE TABLE DOCGIA (
     NgaySinh DATE,
     NgayLapThe DATE DEFAULT GETDATE(),
     TongNo MONEY DEFAULT 0,
-    AnhDaiDien NVARCHAR(500),
+    AnhDaiDien VARBINARY(MAX),
     FOREIGN KEY (MaLoaiDocGia) REFERENCES LOAIDOCGIA(MaLoaiDocGia),
     FOREIGN KEY (TenDangNhap) REFERENCES TAIKHOAN(TenDangNhap) ON DELETE SET NULL
 );
@@ -73,7 +73,7 @@ CREATE TABLE SACH (
     NgonNgu NVARCHAR(50) DEFAULT N'Tiếng Việt',
     TriGia MONEY,
     MoTa NVARCHAR(500),
-    HinhAnh NVARCHAR(255), -- Lưu đường dẫn ảnh local
+    HinhAnh VARBINARY(MAX), -- Lưu dữ liệu ảnh nhị phân
     RowVersion ROWVERSION, -- Optimistic Concurrency Control
     FOREIGN KEY (MaTheLoai) REFERENCES THELOAISACH(MaTheLoai)
 );
@@ -144,15 +144,29 @@ CREATE TABLE YEUCAUMUON (
 );
 GO
 
+-- 13. THÔNG BÁO (THONGBAO) - Lưu thông báo hoạt động của độc giả
+CREATE TABLE THONGBAO (
+    MaThongBao INT PRIMARY KEY IDENTITY(1,1),
+    TenDangNhap VARCHAR(50) NOT NULL,
+    TieuDe NVARCHAR(150) NOT NULL,
+    NoiDung NVARCHAR(500) NOT NULL,
+    LoaiThongBao NVARCHAR(20) NOT NULL CHECK (LoaiThongBao IN ('Success', 'Failure', 'Warning', 'Info')),
+    NgayThongBao DATETIME DEFAULT GETDATE(),
+    DaDoc BIT DEFAULT 0,
+    FOREIGN KEY (TenDangNhap) REFERENCES TAIKHOAN(TenDangNhap) ON DELETE CASCADE
+);
+GO
+
 -- ======================================================================
 -- BỘ DỮ LIỆU KHỞI TẠO MẶC ĐỊNH
 -- ======================================================================
-INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('admin', 'admin123', 'Admin', 'Active');
+INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('admin', 'admin', 'Admin', 'Active');
 -- Thêm tài khoản reader mẫu để test (username: reader1, password: 123456)
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('reader1', '123456', 'Reader', 'Active');
 INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('SoNgayMuonToiDa', 14);
 INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('TienPhatMoiNgay', 2000);
 INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('SoSachMuonToiDa', 5);
+INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('TongNoToiDa', 50000);
 GO
 
 -- Khởi tạo danh mục Thể loại sách mặc định
@@ -175,19 +189,19 @@ GO
 -- ======================================================================
 -- Thêm 1 độc giả mẫu liên kết với tài khoản 'reader1'
 INSERT INTO DOCGIA (TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, AnhDaiDien)
-VALUES ('reader1', N'Người đọc mẫu', 1, N'Nam', '0123456789', 'reader1@example.com', N'Hà Nội', '1995-01-01', '/images/readers/reader1.png');
+VALUES ('reader1', N'Người đọc mẫu', 1, N'Nam', '0123456789', 'reader1@example.com', N'Hà Nội', '1995-01-01', NULL);
 GO
 
 -- Thêm một vài đầu sách mẫu và các bản sao vật lý tương ứng để trang Search/Borrowing có dữ liệu
 DECLARE @s1 INT, @s2 INT, @s3 INT;
 INSERT INTO SACH (MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, NgonNgu, TriGia, MoTa, HinhAnh)
-VALUES ('ISBN001', N'Lập trình C# cho người mới', 1, N'Tác giả A', N'NXB A', 2022, N'Tiếng Việt', 120000, N'Hướng dẫn cơ bản C#', '/images/books/book1.png');
+VALUES ('ISBN001', N'Lập trình C# cho người mới', 1, N'Tác giả A', N'NXB A', 2022, N'Tiếng Việt', 120000, N'Hướng dẫn cơ bản C#', NULL);
 SET @s1 = SCOPE_IDENTITY();
 INSERT INTO SACH (MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, NgonNgu, TriGia, MoTa, HinhAnh)
-VALUES ('ISBN002', N'Hướng dẫn WPF', 1, N'Tác giả B', N'NXB B', 2021, N'Tiếng Việt', 100000, N'Hướng dẫn xây dựng ứng dụng WPF', '/images/books/book2.png');
+VALUES ('ISBN002', N'Hướng dẫn WPF', 1, N'Tác giả B', N'NXB B', 2021, N'Tiếng Việt', 100000, N'Hướng dẫn xây dựng ứng dụng WPF', NULL);
 SET @s2 = SCOPE_IDENTITY();
 INSERT INTO SACH (MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, NgonNgu, TriGia, MoTa, HinhAnh)
-VALUES ('ISBN003', N'Thực hành Thuật toán', 3, N'Tác giả C', N'NXB C', 2019, N'English', 150000, N'Thực hành thuật toán cơ bản', '/images/books/book3.png');
+VALUES ('ISBN003', N'Thực hành Thuật toán', 3, N'Tác giả C', N'NXB C', 2019, N'English', 150000, N'Thực hành thuật toán cơ bản', NULL);
 SET @s3 = SCOPE_IDENTITY();
 GO
 
@@ -208,10 +222,79 @@ INSERT INTO YEUCAUMUON (MaDocGia, MaSach, TrangThai)
 VALUES ((SELECT MaDocGia FROM DOCGIA WHERE TenDangNhap = 'reader1'), @s2, N'Pending');
 GO
 
-IF NOT EXISTS (
-    SELECT 1 FROM THAMSO WHERE TenThamSo = N'TongNoToiDa'
-)
+-- ======================================================================
+-- DATABASE INFRASTRUCTURE: ADVANCED LOGIC (TRIGGERS, SPs, INDEXES)
+-- ======================================================================
+-- 1. Trigger tự động cập nhật trạng thái CUONSACH khi có thay đổi mượn/trả
+IF EXISTS (SELECT * FROM sys.triggers WHERE name = 'trg_SyncCuonSachStatus')
+    DROP TRIGGER trg_SyncCuonSachStatus;
+GO
+
+CREATE TRIGGER trg_SyncCuonSachStatus
+ON CHITIETMUONTRA
+AFTER INSERT, UPDATE
+AS
 BEGIN
-    INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES (N'TongNoToiDa', 50000);
-END
+    SET NOCOUNT ON;
+
+    -- A. Trường hợp Mượn sách (Insert mới hoặc Update NgayTraThucTe vẫn là NULL)
+    UPDATE CS
+    SET TinhTrang = N'Đang mượn'
+    FROM CUONSACH CS
+    INNER JOIN inserted i ON CS.MaCuonSach = i.MaCuonSach
+    WHERE i.NgayTraThucTe IS NULL;
+
+    -- B. Trường hợp Trả sách (Update NgayTraThucTe chuyển sang có giá trị)
+    UPDATE CS
+    SET TinhTrang = ISNULL(i.TinhTrangCuonSachKhiTra, N'Sẵn sàng')
+    FROM CUONSACH CS
+    INNER JOIN inserted i ON CS.MaCuonSach = i.MaCuonSach
+    WHERE i.NgayTraThucTe IS NOT NULL;
+END;
+GO
+
+-- 2. Stored Procedure xuất báo cáo quá hạn
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'sp_GetOverdueReport')
+    DROP PROCEDURE sp_GetOverdueReport;
+GO
+
+CREATE PROCEDURE sp_GetOverdueReport
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @fineRate MONEY;
+
+    -- Lấy mức phạt quy định từ bảng THAMSO
+    SELECT @fineRate = CAST(GiaTri AS MONEY) FROM THAMSO WHERE TenThamSo = 'TienPhatMoiNgay';
+    SET @fineRate = ISNULL(@fineRate, 2000);
+
+    -- Truy vấn danh sách các cuốn sách chưa trả và đã vượt quá HanTra
+    SELECT 
+        DG.HoTen AS [TenDocGia],
+        DG.SoDienThoai AS [SoDienThoai],
+        S.TenSach AS [TenSach],
+        CS.MaCuonSach AS [MaCuonSach],
+        PM.NgayMuon AS [NgayMuon],
+        CT.HanTra AS [HanTra],
+        DATEDIFF(day, CT.HanTra, GETDATE()) AS [SoNgayTre],
+        (DATEDIFF(day, CT.HanTra, GETDATE()) * @fineRate) AS [TienPhatDuKien]
+    FROM CHITIETMUONTRA CT
+    JOIN PHIEUMUON PM ON CT.MaPhieuMuon = PM.MaPhieuMuon
+    JOIN DOCGIA DG ON PM.MaDocGia = DG.MaDocGia
+    JOIN CUONSACH CS ON CT.MaCuonSach = CS.MaCuonSach
+    JOIN SACH S ON CS.MaSach = S.MaSach
+    WHERE CT.NgayTraThucTe IS NULL
+      AND CT.HanTra < GETDATE();
+END;
+GO
+
+-- 3. Tối ưu hóa hiệu năng tìm kiếm (Performance Indexing)
+IF NOT EXISTS (SELECT name FROM sys.indexes WHERE name = 'idx_Sach_MaISBN')
+    CREATE NONCLUSTERED INDEX idx_Sach_MaISBN ON SACH (MaISBN);
+
+IF NOT EXISTS (SELECT name FROM sys.indexes WHERE name = 'idx_Sach_TenSach')
+    CREATE NONCLUSTERED INDEX idx_Sach_TenSach ON SACH (TenSach);
+
+IF NOT EXISTS (SELECT name FROM sys.indexes WHERE name = 'idx_DocGia_HoTen_SĐT')
+    CREATE NONCLUSTERED INDEX idx_DocGia_HoTen_SĐT ON DOCGIA (HoTen, SoDienThoai);
 GO

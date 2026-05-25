@@ -15,6 +15,25 @@ namespace THUVIENZ.BLL
             if (exists) return false;
             context.YeuCauMuons.Add(new YeuCauMuon { MaDocGia = maDocGia, MaSach = maSach });
             await context.SaveChangesAsync();
+
+            // Sinh thông báo tự động gửi yêu cầu mượn thành công
+            var docGia = await context.DocGias.FindAsync(maDocGia);
+            var sach = await context.Sachs.FindAsync(maSach);
+            if (docGia != null && sach != null && !string.IsNullOrEmpty(docGia.TenDangNhap))
+            {
+                var notification = new ThongBao
+                {
+                    TenDangNhap = docGia.TenDangNhap,
+                    TieuDe = "Gửi yêu cầu mượn sách",
+                    NoiDung = $"Yêu cầu mượn cuốn sách '{sach.TenSach}' đã được gửi thành công và đang chờ thủ thư phê duyệt.",
+                    LoaiThongBao = "Info",
+                    NgayThongBao = System.DateTime.Now,
+                    DaDoc = false
+                };
+                context.ThongBaos.Add(notification);
+                await context.SaveChangesAsync();
+            }
+
             return true;
         }
 

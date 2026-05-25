@@ -52,15 +52,15 @@ namespace THUVIENZ.Views
                     {
                         RegisterTab(b, 0);
                     }
-                    else if (tb.Text.Contains("Lịch sử"))
+                    else if (tb.Text.Contains("Đang yêu cầu"))
                     {
                         RegisterTab(b, 1);
                     }
-                    else if (tb.Text.Contains("Quy định"))
+                    else if (tb.Text.Contains("Lịch sử"))
                     {
                         RegisterTab(b, 2);
                     }
-                    else if (tb.Text.Contains("Yêu cầu mượn"))
+                    else if (tb.Text.Contains("Quy định"))
                     {
                         RegisterTab(b, 3);
                     }

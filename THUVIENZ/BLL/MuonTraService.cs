@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using THUVIENZ.DAL;
+using THUVIENZ.DAL.Base;
 using THUVIENZ.Models;
 
 namespace THUVIENZ.BLL
@@ -26,35 +27,67 @@ namespace THUVIENZ.BLL
     /// </summary>
     public class MuonTraService
     {
-        private readonly LmsDbContext _context;
-        private readonly LibrarySettingsService _settingsService;
-
-        public MuonTraService() : this(new LmsDbContext(), new LibrarySettingsService())
+        public MuonTraService()
         {
         }
 
         public MuonTraService(LmsDbContext context, LibrarySettingsService settingsService)
         {
-            _context = context;
-            _settingsService = settingsService;
+        }
+
+        /// <summary>
+        /// Gửi yêu cầu trả một cuốn sách từ phía Reader (Kiosk).
+        /// Chỉ cập nhật tình trạng thành "Yêu cầu trả" chứ chưa chính thức hoàn trả.
+        /// </summary>
+        public async Task<bool> YeuCauTraSachAsync(int maCuonSach, int maPhieuMuon)
+        {
+            using var context = new LmsDbContext();
+            
+            var chiTiet = await context.ChiTietMuonTras
+                .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.MaPhieuMuon == maPhieuMuon && c.NgayTraThucTe == null && c.TinhTrangCuonSachKhiTra != "Yêu cầu trả");
+
+            if (chiTiet == null)
+            {
+                throw new InvalidOperationException("Không tìm thấy bản ghi mượn chưa trả cho cuốn sách này.");
+            }
+
+            chiTiet.TinhTrangCuonSachKhiTra = "Yêu cầu trả";
+            await context.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
         /// Thực hiện thủ tục hoàn trả một cuốn sách vật lý dựa trên mã cuốn sách (RFID/Barcode).
         /// Bọc toàn bộ trong Database Transaction để đảm bảo tính nguyên tử tuyệt đối.
         /// </summary>
-        public async Task<KetQuaTraSach> ThucHienTraSachAsync(int maCuonSach)
+        public async Task<KetQuaTraSach> ThucHienTraSachAsync(int maCuonSach, int maPhieuMuon = 0)
         {
-            // Sử dụng Transaction để đảm bảo tính nguyên tử (Atomicity)
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var context = new LmsDbContext();
+            var settingsService = new LibrarySettingsService(new BaseRepository<ThamSo>(context));
+            using var transaction = await context.Database.BeginTransactionAsync();
             try
             {
                 // 1. Tìm bản ghi trong CHITIETMUONTRA khớp mã cuốn sách và chưa được trả (NgayTraThucTe == null)
-                var chiTiet = await _context.ChiTietMuonTras
-                    .Include(c => c.CuonSach)
-                    .Include(c => c.PhieuMuon)
-                    .ThenInclude(p => p!.DocGia)
-                    .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.NgayTraThucTe == null);
+                ChiTietMuonTra? chiTiet = null;
+                if (maPhieuMuon > 0)
+                {
+                    chiTiet = await context.ChiTietMuonTras
+                        .Include(c => c.CuonSach)
+                            .ThenInclude(cs => cs!.Sach)
+                        .Include(c => c.PhieuMuon)
+                            .ThenInclude(p => p!.DocGia)
+                        .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.MaPhieuMuon == maPhieuMuon && c.NgayTraThucTe == null);
+                }
+
+                if (chiTiet == null)
+                {
+                    chiTiet = await context.ChiTietMuonTras
+                        .Include(c => c.CuonSach)
+                            .ThenInclude(cs => cs!.Sach)
+                        .Include(c => c.PhieuMuon)
+                            .ThenInclude(p => p!.DocGia)
+                        .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.NgayTraThucTe == null);
+                }
 
                 // Nếu không tìm thấy, ném ra ngoại lệ cảnh báo chính xác theo yêu cầu
                 if (chiTiet == null)
@@ -77,20 +110,12 @@ namespace THUVIENZ.BLL
                     soNgayTre = (ngayTra.Date - chiTiet.HanTra.Date).Days;
                     
                     // Lấy đơn giá phạt mỗi ngày từ bảng THAMSO thông qua SettingsService
-                    decimal donGiaPhat = (decimal)await _settingsService.GetValueAsync("TienPhatMoiNgay");
+                    decimal donGiaPhat = (decimal)await settingsService.GetValueAsync("TienPhatMoiNgay");
                     tienPhat = soNgayTre * donGiaPhat;
                 }
 
                 chiTiet.TienPhat = tienPhat;
 
-                // 4. Cập nhật lại tình trạng của cuốn sách vật lý thành 'Sẵn sàng' (Do Trigger trg_SyncCuonSachStatus tự động đảm nhiệm dưới DB)
-                // if (chiTiet.CuonSach != null)
-                // {
-                //     chiTiet.CuonSach.TinhTrang = "Sẵn sàng";
-                //     _context.CuonSachs.Update(chiTiet.CuonSach);
-                // }
-
-                // Không gọi Update tường minh do EF Core tự động theo dõi (Tracking) các thay đổi thuộc tính
                 // 5. Nếu phát sinh tiền phạt, cộng dồn vào Tổng nợ của Độc giả và tự động kiểm tra ngưỡng đình chỉ
                 bool biDinhChi = false;
                 if (tienPhat > 0 && chiTiet.PhieuMuon?.DocGia != null)
@@ -99,24 +124,73 @@ namespace THUVIENZ.BLL
                     docGia.TongNo += tienPhat;
 
                     // Lấy ra ngưỡng nợ đọng tối đa từ bảng THAMSO
-                    decimal tongNoToiDa = (decimal)await _settingsService.GetValueAsync("TongNoToiDa");
+                    decimal tongNoToiDa = (decimal)await settingsService.GetValueAsync("TongNoToiDa");
                     
                     // Tự động kiểm tra nếu Tổng nợ vượt ngưỡng thì đình chỉ (Khóa) tài khoản
                     if (docGia.TongNo > tongNoToiDa)
                     {
-                        var taiKhoan = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.TenDangNhap == docGia.TenDangNhap);
+                        var taiKhoan = await context.TaiKhoans.FirstOrDefaultAsync(t => t.TenDangNhap == docGia.TenDangNhap);
                         if (taiKhoan != null && taiKhoan.TrangThai == "Active")
                         {
                             taiKhoan.TrangThai = "Locked";
                             biDinhChi = true;
                         }
                     }
-
-
                 }
 
                 // Lưu toàn bộ thay đổi xuống DB
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
+
+                // Tạo các thông báo tương ứng cho độc giả
+                if (chiTiet.PhieuMuon?.DocGia != null && !string.IsNullOrEmpty(chiTiet.PhieuMuon.DocGia.TenDangNhap))
+                {
+                    string username = chiTiet.PhieuMuon.DocGia.TenDangNhap;
+                    string tenSach = chiTiet.CuonSach?.Sach?.TenSach ?? "Sách";
+                    
+                    // 1. Thông báo trả sách thành công (Return verified)
+                    var notiTra = new ThongBao
+                    {
+                        TenDangNhap = username,
+                        TieuDe = "Trả sách thành công",
+                        NoiDung = $"Cuốn sách '{tenSach}' đã được thủ thư nhận lại và xác nhận hoàn trả thành công.",
+                        LoaiThongBao = "Success",
+                        NgayThongBao = DateTime.Now,
+                        DaDoc = false
+                    };
+                    context.ThongBaos.Add(notiTra);
+
+                    // 2. Thông báo phạt tiền nếu có (Late fee incurred)
+                    if (tienPhat > 0)
+                    {
+                        var notiPhat = new ThongBao
+                        {
+                            TenDangNhap = username,
+                            TieuDe = "Phát sinh phí phạt trễ hạn",
+                            NoiDung = $"Bạn bị phạt {tienPhat:N0} VNĐ cho cuốn sách '{tenSach}' do trả trễ {soNgayTre} ngày.",
+                            LoaiThongBao = "Warning",
+                            NgayThongBao = DateTime.Now,
+                            DaDoc = false
+                        };
+                        context.ThongBaos.Add(notiPhat);
+                    }
+
+                    // 3. Thông báo tài khoản bị đình chỉ nếu tổng nợ vượt ngưỡng (Suspension warnings)
+                    if (biDinhChi)
+                    {
+                        var notiDinhChi = new ThongBao
+                        {
+                            TenDangNhap = username,
+                            TieuDe = "Tài khoản bị khóa",
+                            NoiDung = $"Tài khoản của bạn đã bị khóa tự động do tổng nợ đọng ({chiTiet.PhieuMuon.DocGia.TongNo:N0} VNĐ) vượt quá ngưỡng cho phép.",
+                            LoaiThongBao = "Failure",
+                            NgayThongBao = DateTime.Now,
+                            DaDoc = false
+                        };
+                        context.ThongBaos.Add(notiDinhChi);
+                    }
+
+                    await context.SaveChangesAsync();
+                }
 
                 // Xác nhận giao dịch thành công
                 await transaction.CommitAsync();
@@ -150,7 +224,9 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<bool> GiaHanSachAsync(int maCuonSach)
         {
-            var chiTiet = await _context.ChiTietMuonTras
+            using var context = new LmsDbContext();
+            var settingsService = new LibrarySettingsService(new BaseRepository<ThamSo>(context));
+            var chiTiet = await context.ChiTietMuonTras
                 .Include(c => c.PhieuMuon)
                 .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.NgayTraThucTe == null);
 
@@ -160,7 +236,7 @@ namespace THUVIENZ.BLL
             if (chiTiet.HanTra < DateTime.Now)
                 throw new InvalidOperationException("Không thể gia hạn vì sách đã quá hạn.");
 
-            int soNgayMuonToiDa = (int)await _settingsService.GetValueAsync("SoNgayMuonToiDa");
+            int soNgayMuonToiDa = (int)await settingsService.GetValueAsync("SoNgayMuonToiDa");
             int currentDays = (int)Math.Round((chiTiet.HanTra - chiTiet.PhieuMuon!.NgayMuon).TotalDays);
             int extensions = (currentDays - soNgayMuonToiDa) / 14;
 
@@ -169,7 +245,7 @@ namespace THUVIENZ.BLL
 
             chiTiet.HanTra = chiTiet.HanTra.AddDays(14);
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             return true;
         }
 
@@ -178,15 +254,17 @@ namespace THUVIENZ.BLL
             if (danhSachMaCuonSach == null || danhSachMaCuonSach.Count == 0)
                 throw new ArgumentException("Danh sách cuốn sách mượn không được rỗng.");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var context = new LmsDbContext();
+            var settingsService = new LibrarySettingsService(new BaseRepository<ThamSo>(context));
+            using var transaction = await context.Database.BeginTransactionAsync();
             try
             {
                 // 1. Kiểm tra giới hạn số sách mượn tối đa của độc giả
-                int soSachToiDa = (int)await _settingsService.GetValueAsync("SoSachMuonToiDa");
-                int soNgayMuonToiDa = (int)await _settingsService.GetValueAsync("SoNgayMuonToiDa");
+                int soSachToiDa = (int)await settingsService.GetValueAsync("SoSachMuonToiDa");
+                int soNgayMuonToiDa = (int)await settingsService.GetValueAsync("SoNgayMuonToiDa");
 
                 // Đếm số sách vật lý độc giả đang mượn chưa trả
-                int soSachDangMuon = await _context.ChiTietMuonTras
+                int soSachDangMuon = await context.ChiTietMuonTras
                     .Include(c => c.PhieuMuon)
                     .CountAsync(c => c.PhieuMuon!.MaDocGia == maDocGia && c.NgayTraThucTe == null);
 
@@ -202,15 +280,15 @@ namespace THUVIENZ.BLL
                     NgayMuon = DateTime.Now
                 };
 
-                await _context.PhieuMuons.AddAsync(phieuMuon);
-                await _context.SaveChangesAsync(); // Lưu để lấy MaPhieuMuon tự tăng
+                await context.PhieuMuons.AddAsync(phieuMuon);
+                await context.SaveChangesAsync(); // Lưu để lấy MaPhieuMuon tự tăng
 
                 // 3. Xử lý từng cuốn sách vật lý
                 DateTime hanTra = DateTime.Now.AddDays(soNgayMuonToiDa);
 
                 foreach (int maCuonSach in danhSachMaCuonSach)
                 {
-                    var cuonSach = await _context.CuonSachs
+                    var cuonSach = await context.CuonSachs
                         .Include(c => c.Sach)
                         .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach);
 
@@ -230,14 +308,10 @@ namespace THUVIENZ.BLL
                         TienPhat = 0
                     };
 
-                    await _context.ChiTietMuonTras.AddAsync(chiTiet);
-
-                    // Cập nhật trạng thái cuốn sách thành Đang mượn (Trigger DB tự động lo)
-                    // cuonSach.TinhTrang = "Đang mượn";
-                    // _context.CuonSachs.Update(cuonSach);
+                    await context.ChiTietMuonTras.AddAsync(chiTiet);
                 }
 
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return true;
             }

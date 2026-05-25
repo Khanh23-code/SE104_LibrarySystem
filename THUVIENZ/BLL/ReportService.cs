@@ -15,9 +15,9 @@ namespace THUVIENZ.BLL
     /// </summary>
     public class ReportService
     {
-        private readonly LmsDbContext _context;
+        private readonly LmsDbContext? _context;
 
-        public ReportService() : this(new LmsDbContext())
+        public ReportService()
         {
         }
 
@@ -32,11 +32,14 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<List<BookPairDTO>> GetFrequentBookPairsWithNamesAsync(int minSupport = 2)
         {
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
             var pairs = await GetFrequentBookPairsAsync(minSupport);
             if (!pairs.Any()) return new List<BookPairDTO>();
 
             var bookIds = pairs.Select(p => p.Item1).Union(pairs.Select(p => p.Item2)).Distinct().ToList();
-            var bookNames = await _context.Sachs
+            var bookNames = await context.Sachs
                 .Where(s => bookIds.Contains(s.MaSach))
                 .ToDictionaryAsync(s => s.MaSach, s => s.TenSach);
 
@@ -55,8 +58,11 @@ namespace THUVIENZ.BLL
         /// <param name="minSupport">Độ hỗ trợ tối thiểu (số lần xuất hiện)</param>
         public async Task<List<Tuple<int, int, int>>> GetFrequentBookPairsAsync(int minSupport = 2)
         {
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
             // 1. Lấy dữ liệu mượn sách theo từng giao dịch (Phiếu mượn)
-            var items = await _context.ChiTietMuonTras
+            var items = await context.ChiTietMuonTras
                 .Include(c => c.CuonSach)
                 .Select(c => new { c.MaPhieuMuon, MaSach = c.CuonSach!.MaSach })
                 .ToListAsync();
@@ -100,15 +106,18 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<DashboardSummaryDTO> GetDashboardSummaryAsync()
         {
-            var totalBooks = await _context.Sachs.CountAsync();
-            var totalReaders = await _context.DocGias.CountAsync();
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
+            var totalBooks = await context.Sachs.CountAsync();
+            var totalReaders = await context.DocGias.CountAsync();
             
             // Sách đang mượn (NgayTraThucTe == null)
-            var borrowedBooks = await _context.ChiTietMuonTras
+            var borrowedBooks = await context.ChiTietMuonTras
                 .CountAsync(c => c.NgayTraThucTe == null);
 
             // Sách trễ hạn (NgayTraThucTe == null và HanTra < Now)
-            var overdueBooks = await _context.ChiTietMuonTras
+            var overdueBooks = await context.ChiTietMuonTras
                 .CountAsync(c => c.NgayTraThucTe == null && c.HanTra < DateTime.Now);
 
             return new DashboardSummaryDTO
@@ -126,8 +135,11 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<List<BorrowingTrendDTO>> GetBorrowingTrendAsync(DateTime from, DateTime to)
         {
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
             var trend = new List<BorrowingTrendDTO>();
-            var allData = await _context.ChiTietMuonTras
+            var allData = await context.ChiTietMuonTras
                 .Include(c => c.PhieuMuon)
                 .Where(c => c.PhieuMuon!.NgayMuon >= from && c.PhieuMuon!.NgayMuon <= to)
                 .Select(c => new { c.PhieuMuon!.NgayMuon, c.HanTra, c.NgayTraThucTe })
@@ -157,7 +169,10 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<List<BookStatDTO>> GetTopBorrowedBooksAsync(DateTime from, DateTime to, int top = 10)
         {
-            return await _context.ChiTietMuonTras
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
+            return await context.ChiTietMuonTras
                 .Include(c => c.PhieuMuon)
                 .Include(c => c.CuonSach)
                 .ThenInclude(cs => cs!.Sach)
@@ -179,13 +194,16 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<List<ReaderStatDTO>> GetReaderOverdueReportsAsync()
         {
-            return await _context.DocGias
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
+            return await context.DocGias
                 .Select(d => new ReaderStatDTO
                 {
                     MaDocGia = d.MaDocGia,
                     HoTen = d.HoTen,
                     TongNo = d.TongNo,
-                    OverdueCount = _context.ChiTietMuonTras
+                    OverdueCount = context.ChiTietMuonTras
                         .Count(c => c.PhieuMuon!.MaDocGia == d.MaDocGia && 
                                     c.NgayTraThucTe == null && 
                                     c.HanTra < DateTime.Now)
@@ -199,7 +217,10 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<IEnumerable<object>> GetBorrowingStatsByCategoryAsync(DateTime from, DateTime to)
         {
-            var data = await _context.ChiTietMuonTras
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
+            var data = await context.ChiTietMuonTras
                 .Include(c => c.PhieuMuon)
                 .Include(c => c.CuonSach)
                 .ThenInclude(cs => cs!.Sach)
