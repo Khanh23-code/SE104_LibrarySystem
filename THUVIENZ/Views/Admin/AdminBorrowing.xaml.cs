@@ -13,9 +13,25 @@ namespace THUVIENZ.Views
         public AdminBorrowing()
         {
             InitializeComponent();
+
+            if (System.ComponentModel.DesignerProperties.GetIsInDesignMode(this)) return;
+
             _viewModel = new AdminCirculationViewModel();
             this.DataContext = _viewModel;
             this.Loaded += AdminBorrowing_Loaded;
+
+            dgPendingReaders.ItemsSource = new[]
+            {
+                new { ReaderID = "RD_012", ReaderName = "Khang Nguyễn" },
+                new { ReaderID = "RD_043", ReaderName = "Trần Minh Tâm" },
+                new { ReaderID = "RD_089", ReaderName = "Phạm Hoàng Bách" }
+            };
+
+            dgPendingBooks.ItemsSource = new[]
+            {
+                new { BookTitle = "Clean Code - Robert C. Martin", BookCode = "CS-8891", RequestDate = "25/05/2026 09:30" },
+                new { BookTitle = "Design Patterns", BookCode = "CS-1123", RequestDate = "25/05/2026 10:15" }
+            };
         }
 
         private void AdminBorrowing_Loaded(object sender, RoutedEventArgs e)
