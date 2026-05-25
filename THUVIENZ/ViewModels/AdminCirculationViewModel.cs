@@ -227,6 +227,7 @@ namespace THUVIENZ.ViewModels
             if (IsRequestTab)
             {
                 readers = await query
+                    .Where(d => d.TaiKhoan == null || d.TaiKhoan.TrangThai == "Active")
                     .Select(d => new DocGiaWithBorrowCount
                     {
                         MaDocGia = d.MaDocGia,
@@ -358,6 +359,18 @@ namespace THUVIENZ.ViewModels
                     using var transaction = await context.Database.BeginTransactionAsync();
                     try
                     {
+                        // 0. Kiểm tra trạng thái kích hoạt của độc giả trước khi phê duyệt
+                        var currentReader = await context.DocGias
+                            .Include(dg => dg.TaiKhoan)
+                            .FirstOrDefaultAsync(dg => dg.MaDocGia == currentReaderId);
+
+                        if (currentReader?.TaiKhoan != null && 
+                            (currentReader.TaiKhoan.TrangThai == "Locked" || currentReader.TaiKhoan.TrangThai == "DisActive"))
+                        {
+                            MessageBox.Show("Độc giả này đang bị khóa hoặc vô hiệu hóa. Không thể phê duyệt mượn sách.", "Không thể phê duyệt", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+
                         // 1. Tìm cuốn sách vật lý (CuonSach) bất kỳ của đầu sách này có TrangThai là "Sẵn sàng"
                         var cuonSach = await context.CuonSachs
                             .FirstOrDefaultAsync(cs => cs.MaSach == book.MaSach && cs.TinhTrang == "Sẵn sàng");
