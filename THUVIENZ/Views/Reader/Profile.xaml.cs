@@ -68,8 +68,14 @@ namespace THUVIENZ.Views
                 {
                     if (_viewModel.CurrentReader != null)
                     {
-                        // Lưu đường dẫn tạm thời vào model. Tùy app có thể cần copy file vào thư mục dự án.
-                        _viewModel.CurrentReader.AnhDaiDien = dlg.FileName;
+                        try
+                        {
+                            _viewModel.CurrentReader.AnhDaiDien = System.IO.File.ReadAllBytes(dlg.FileName);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.MessageBox.Show($"Không thể nạp ảnh đại diện: {ex.Message}", "Lỗi tải ảnh", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        }
                     }
                 }
             }

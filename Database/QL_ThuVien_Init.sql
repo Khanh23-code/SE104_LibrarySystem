@@ -50,7 +50,7 @@ CREATE TABLE DOCGIA (
     NgaySinh DATE,
     NgayLapThe DATE DEFAULT GETDATE(),
     TongNo MONEY DEFAULT 0,
-    AnhDaiDien NVARCHAR(500),
+    AnhDaiDien VARBINARY(MAX),
     FOREIGN KEY (MaLoaiDocGia) REFERENCES LOAIDOCGIA(MaLoaiDocGia),
     FOREIGN KEY (TenDangNhap) REFERENCES TAIKHOAN(TenDangNhap) ON DELETE SET NULL
 );
@@ -176,7 +176,7 @@ GO
 -- ======================================================================
 -- Thêm 1 độc giả mẫu liên kết với tài khoản 'reader1'
 INSERT INTO DOCGIA (TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, AnhDaiDien)
-VALUES ('reader1', N'Người đọc mẫu', 1, N'Nam', '0123456789', 'reader1@example.com', N'Hà Nội', '1995-01-01', '/images/readers/reader1.png');
+VALUES ('reader1', N'Người đọc mẫu', 1, N'Nam', '0123456789', 'reader1@example.com', N'Hà Nội', '1995-01-01', NULL);
 GO
 
 -- Thêm một vài đầu sách mẫu và các bản sao vật lý tương ứng để trang Search/Borrowing có dữ liệu
