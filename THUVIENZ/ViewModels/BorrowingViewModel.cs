@@ -114,12 +114,10 @@ namespace THUVIENZ.ViewModels
         public ICommand TraSachCommand { get; }
 
         private readonly MuonTraService _muonTraService;
-        private readonly LmsDbContext _context;
 
         public BorrowingViewModel()
         {
             _muonTraService = new MuonTraService();
-            _context = new LmsDbContext();
 
             AddToCartCommand = new RelayCommand(_ => ExecuteAddToCart());
             CheckoutCommand = new RelayCommand(_ => ExecuteCheckout());
@@ -180,15 +178,15 @@ namespace THUVIENZ.ViewModels
             foreach (var item in selectedItems)
             {
                 var parts = item.TicketID?.Split('-');
-                if (parts == null || parts.Length < 3 || !int.TryParse(parts[2], out int maCuonSach)) continue;
+                if (parts == null || parts.Length < 3 || !int.TryParse(parts[1], out int maPhieuMuon) || !int.TryParse(parts[2], out int maCuonSach)) continue;
 
                 try
                 {
-                    var result = await _muonTraService.ThucHienTraSachAsync(maCuonSach);
-                    if (result.ThanhCong)
+                    bool ok = await _muonTraService.YeuCauTraSachAsync(maCuonSach, maPhieuMuon);
+                    if (ok)
                     {
                         successCount++;
-                        messages += $"- {item.BookTitle}: {result.ThongBao}\n";
+                        messages += $"- {item.BookTitle}: Yêu cầu trả sách đang chờ phê duyệt.\n";
                     }
                 }
                 catch (Exception ex)
@@ -197,7 +195,7 @@ namespace THUVIENZ.ViewModels
                 }
             }
 
-            string msg = $"Đã trả thành công {successCount}/{selectedItems.Count} cuốn sách.\n\nChi tiết:\n{messages}";
+            string msg = $"Đã gửi yêu cầu trả thành công {successCount}/{selectedItems.Count} cuốn sách.\n\nChi tiết:\n{messages}";
             MessageBox.Show(msg, "Kết quả trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
             LoadMyBorrowedBooks();
         }
@@ -214,7 +212,8 @@ namespace THUVIENZ.ViewModels
             }
             try
             {
-                var list = await _context.ChiTietMuonTras
+                using var context = new LmsDbContext();
+                var list = await context.ChiTietMuonTras
                     .Include(c => c.PhieuMuon)
                     .Include(c => c.CuonSach)
                     .ThenInclude(cs => cs!.Sach)
@@ -226,7 +225,7 @@ namespace THUVIENZ.ViewModels
                         BookTitle = c.CuonSach!.Sach != null ? c.CuonSach.Sach.TenSach : "Sách không xác định",
                         BorrowDate = c.PhieuMuon!.NgayMuon.ToString("dd/MM/yyyy"),
                         DueDate = c.HanTra.ToString("dd/MM/yyyy"),
-                        Status = c.NgayTraThucTe == null ? (c.HanTra < DateTime.Now ? "Quá hạn" : "Đang mượn") : "Đã trả"
+                        Status = c.NgayTraThucTe == null ? (c.TinhTrangCuonSachKhiTra == "Yêu cầu trả" ? "Đang phê duyệt" : (c.HanTra < DateTime.Now ? "Quá hạn" : "Đang mượn")) : "Đã trả"
                     })
                     .ToListAsync();
 
@@ -253,7 +252,8 @@ namespace THUVIENZ.ViewModels
 
                 try
                 {
-                    var cuonSach = await _context.CuonSachs
+                    using var context = new LmsDbContext();
+                    var cuonSach = await context.CuonSachs
                         .Include(c => c.Sach)
                         .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach);
 
