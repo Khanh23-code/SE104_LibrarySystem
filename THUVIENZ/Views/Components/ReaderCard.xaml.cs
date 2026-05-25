@@ -32,8 +32,8 @@ namespace THUVIENZ.Views.Components
         public string Phone { get { return (string)GetValue(PhoneProperty); } set { SetValue(PhoneProperty, value); } }
 
         public static readonly DependencyProperty AvatarSourceProperty =
-            DependencyProperty.Register("AvatarSource", typeof(string), typeof(ReaderCard), new PropertyMetadata("/Assets/phai.png"));
-        public string AvatarSource { get { return (string)GetValue(AvatarSourceProperty); } set { SetValue(AvatarSourceProperty, value); } }
+            DependencyProperty.Register("AvatarSource", typeof(object), typeof(ReaderCard), new PropertyMetadata("/Assets/phai.png"));
+        public object AvatarSource { get { return GetValue(AvatarSourceProperty); } set { SetValue(AvatarSourceProperty, value); } }
 
         // MVVM Command support
         public static readonly DependencyProperty DeleteCommandProperty =
