@@ -1,8 +1,8 @@
-# 📚 Librix (THUVIENZ) - Modern Library Management System
+# 📚 Librix - Library Management System
 
 Librix là một hệ thống quản lý thư viện hiện đại được xây dựng dưới dạng ứng dụng Desktop. Dự án cung cấp giải pháp toàn diện để quản lý danh mục sách, theo dõi quá trình mượn/trả, xử lý vi phạm và cung cấp trải nghiệm tìm kiếm, đặt trước sách trực quan cho độc giả.
 
-## ✨ Tính năng nổi bật (Key Features)
+## ✨ Tính năng nổi bật 
 
 ### 👨‍💼 Dành cho Quản trị viên (Admin)
 - **Quản lý Sách (Book Inventory):** Thêm, sửa, xóa và theo dõi số lượng tồn kho theo thời gian thực.
