@@ -42,17 +42,25 @@ Vào thư mục `Database` của dự án và chạy lần lượt 4 file script
 ### 2. Cấu hình & Chạy dự án
 1. Clone repository về máy:
    ```bash
-   git clone [https://github.com/your-username/Librix.git](https://github.com/your-username/Librix.git)
-2. Mở file THUVIENZ/App.config và thay đổi chuỗi kết nối (Connection String) sao cho khớp với cấu hình SQL Server trên máy bạn. Ví dụ:
+   git clone https://github.com/your-username/Librix.git
+   ```
+
+2. Mở file `THUVIENZ/App.config` và thay đổi chuỗi kết nối (Connection String) sao cho khớp với cấu hình SQL Server trên máy bạn. Ví dụ:
+   ```xml
    <connectionStrings>
-    <add name="DefaultConnection" connectionString="Server=YOUR_SERVER_NAME;Database=QL_ThuVien;Trusted_Connection=True;" providerName="System.Data.SqlClient" />
-  </connectionStrings>
+       <add name="DefaultConnection" connectionString="Server=YOUR_SERVER_NAME;Database=QL_ThuVien;Trusted_Connection=True;" providerName="System.Data.SqlClient" />
+   </connectionStrings>
+   ```
+
 3. Mở terminal tại thư mục gốc và chạy lệnh khôi phục các gói NuGet (LiveCharts, BCrypt...):
+   ```bash
    dotnet restore
-4. Build và chạy dự án (Nhấn F5 hoặc Ctrl + Shift + B trong Visual Studio).
+   ```
 
-## 📁 Cấu trúc thư mục
+4. Build và chạy dự án (Nhấn `F5` hoặc `Ctrl + Shift + B` trong Visual Studio).
 
+## 📁 Cấu trúc thư mục (Folder Structure)
+```text
 THUVIENZ/
 ├── Database/       # Các script SQL khởi tạo hệ thống
 ├── Models/         # Các thực thể dữ liệu (Reader, Book, BorrowCard...)
@@ -62,3 +70,4 @@ THUVIENZ/
 ├── Services/       # Business logic (kiểm tra hạn mức, mã hóa mật khẩu...)
 ├── Repositories/   # Data Access Layer giao tiếp với SQL Server
 └── App.config      # File cấu hình chứa Connection String
+```
