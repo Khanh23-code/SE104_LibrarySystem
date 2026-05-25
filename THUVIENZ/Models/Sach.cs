@@ -153,17 +153,50 @@ namespace THUVIENZ.Models
             }
         }
 
-        private string? _hinhAnh;
+        private byte[]? _hinhAnh;
         /// <summary>
-        /// Đường dẫn lưu trữ hình ảnh bìa sách local.
+        /// Dữ liệu hình ảnh bìa sách nhị phân lưu trong DB.
         /// </summary>
-        public string? HinhAnh
+        public byte[]? HinhAnh
         {
             get => _hinhAnh;
             set
             {
                 _hinhAnh = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(ImageSource));
+            }
+        }
+
+        /// <summary>
+        /// Đối tượng ImageSource phục vụ hiển thị ảnh bìa trên UI WPF.
+        /// </summary>
+        [NotMapped]
+        public System.Windows.Media.ImageSource? ImageSource
+        {
+            get
+            {
+                if (HinhAnh == null || HinhAnh.Length == 0) return null;
+                try
+                {
+                    var image = new System.Windows.Media.Imaging.BitmapImage();
+                    using (var mem = new System.IO.MemoryStream(HinhAnh))
+                    {
+                        mem.Position = 0;
+                        image.BeginInit();
+                        image.CreateOptions = System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat;
+                        image.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                        image.UriSource = null;
+                        image.StreamSource = mem;
+                        image.EndInit();
+                    }
+                    image.Freeze();
+                    return image;
+                }
+                catch
+                {
+                    return null;
+                }
             }
         }
 
