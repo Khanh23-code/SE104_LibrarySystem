@@ -9,6 +9,7 @@ using System.Windows.Input;
 using THUVIENZ.BLL;
 using THUVIENZ.Core;
 using THUVIENZ.DAL;
+using THUVIENZ.Models;
 
 namespace THUVIENZ.ViewModels
 {
@@ -23,7 +24,7 @@ namespace THUVIENZ.ViewModels
         private readonly MuonTraService _muonTraService;
         private readonly LibrarySettingsService _settingsService;
 
-        private int _selectedTabIndex = 0; // 0: Đang mượn, 1: Lịch sử, 2: Quy định & Xử phạt
+        private int _selectedTabIndex = 0; // 0: Đang mượn, 1: Đang yêu cầu, 2: Lịch sử, 3: Quy định & Xử phạt
         public int SelectedTabIndex
         {
             get => _selectedTabIndex;
@@ -34,19 +35,23 @@ namespace THUVIENZ.ViewModels
                 OnPropertyChanged(nameof(IsCirculationVisible));
                 OnPropertyChanged(nameof(IsSettingsVisible));
 
-                if (_selectedTabIndex == 0 || _selectedTabIndex == 1)
+                if (_selectedTabIndex == 0 || _selectedTabIndex == 1 || _selectedTabIndex == 2)
                 {
-                    IsHistoryTab = (_selectedTabIndex == 1);
+                    IsHistoryTab = (_selectedTabIndex == 2);
+                    IsRequestTab = (_selectedTabIndex == 1);
+                    BorrowedBooks.Clear();
+                    SelectedReader = null;
+                    _ = LoadReadersAsync();
                 }
-                else if (_selectedTabIndex == 2)
+                else if (_selectedTabIndex == 3)
                 {
                     _ = LoadSettingsAsync();
                 }
             }
         }
 
-        public Visibility IsCirculationVisible => SelectedTabIndex != 2 ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility IsSettingsVisible => SelectedTabIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility IsCirculationVisible => SelectedTabIndex != 3 ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility IsSettingsVisible => SelectedTabIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
 
         // Các thuộc tính Quản lý Cơ chế / Tham số Thư viện
         private double _tienPhatMoiNgay;
@@ -85,8 +90,17 @@ namespace THUVIENZ.ViewModels
             {
                 _isHistoryTab = value;
                 OnPropertyChanged();
-                _ = LoadReadersAsync();
-                BorrowedBooks.Clear();
+            }
+        }
+
+        private bool _isRequestTab;
+        public bool IsRequestTab
+        {
+            get => _isRequestTab;
+            set
+            {
+                _isRequestTab = value;
+                OnPropertyChanged();
             }
         }
 
@@ -210,17 +224,34 @@ namespace THUVIENZ.ViewModels
                 query = query.Where(d => d.HoTen.ToLower().Contains(keyword) || d.MaDocGia.ToString().Contains(keyword));
             }
 
-            var readers = await query
-                .Select(d => new DocGiaWithBorrowCount
-                {
-                    MaDocGia = d.MaDocGia,
-                    HoTen = d.HoTen,
-                    BorrowCount = _context.ChiTietMuonTras
-                        .Include(c => c.PhieuMuon)
-                        .Count(c => c.PhieuMuon!.MaDocGia == d.MaDocGia && (isReturnedFilter ? c.NgayTraThucTe != null : c.NgayTraThucTe == null))
-                })
-                .Where(x => x.BorrowCount > 0)
-                .ToListAsync();
+            List<DocGiaWithBorrowCount> readers;
+            if (IsRequestTab)
+            {
+                readers = await query
+                    .Select(d => new DocGiaWithBorrowCount
+                    {
+                        MaDocGia = d.MaDocGia,
+                        HoTen = d.HoTen,
+                        BorrowCount = _context.YeuCauMuons
+                            .Count(y => y.MaDocGia == d.MaDocGia && y.TrangThai == "Pending")
+                    })
+                    .Where(x => x.BorrowCount > 0)
+                    .ToListAsync();
+            }
+            else
+            {
+                readers = await query
+                    .Select(d => new DocGiaWithBorrowCount
+                    {
+                        MaDocGia = d.MaDocGia,
+                        HoTen = d.HoTen,
+                        BorrowCount = _context.ChiTietMuonTras
+                            .Include(c => c.PhieuMuon)
+                            .Count(c => c.PhieuMuon!.MaDocGia == d.MaDocGia && (isReturnedFilter ? c.NgayTraThucTe != null : c.NgayTraThucTe == null))
+                    })
+                    .Where(x => x.BorrowCount > 0)
+                    .ToListAsync();
+            }
 
             ReadersList = new ObservableCollection<DocGiaWithBorrowCount>(readers);
 
@@ -245,28 +276,54 @@ namespace THUVIENZ.ViewModels
         /// </summary>
         public async Task LoadBorrowedBooksAsync(int readerId)
         {
-            bool isReturnedFilter = IsHistoryTab;
+            if (IsRequestTab)
+            {
+                var requests = await _context.YeuCauMuons
+                    .Include(y => y.Sach)
+                    .Where(y => y.MaDocGia == readerId && y.TrangThai == "Pending")
+                    .Select(y => new BorrowedBookInfo
+                    {
+                        MaSach = y.MaSach,
+                        MaCuonSach = 0,
+                        MaYeuCau = y.MaYeuCau,
+                        TenSach = y.Sach != null ? y.Sach.TenSach : "Không xác định",
+                        NgayMuon = y.NgayYeuCau,
+                        HanTra = DateTime.Now,
+                        NgayTra = null,
+                        TienPhat = 0,
+                        IsActionEnabled = true,
+                        ActionText = "Phê duyệt"
+                    })
+                    .ToListAsync();
 
-            var books = await _context.ChiTietMuonTras
-                .Include(c => c.PhieuMuon)
-                .Include(c => c.CuonSach)
-                .ThenInclude(cs => cs!.Sach)
-                .Where(c => c.PhieuMuon!.MaDocGia == readerId && (isReturnedFilter ? c.NgayTraThucTe != null : c.NgayTraThucTe == null))
-                .Select(c => new BorrowedBookInfo
-                {
-                    MaSach = c.MaCuonSach, // Ánh xạ sang MaCuonSach để hiển thị đúng ID vật lý trên cột DataGrid XAML
-                    MaCuonSach = c.MaCuonSach,
-                    TenSach = c.CuonSach!.Sach != null ? c.CuonSach.Sach.TenSach : "Không xác định",
-                    NgayMuon = c.PhieuMuon!.NgayMuon,
-                    HanTra = c.HanTra,
-                    NgayTra = c.NgayTraThucTe,
-                    TienPhat = c.TienPhat,
-                    IsActionEnabled = c.NgayTraThucTe == null,
-                    ActionText = c.NgayTraThucTe == null ? "Nhận trả" : "Đã trả"
-                })
-                .ToListAsync();
+                BorrowedBooks = new ObservableCollection<BorrowedBookInfo>(requests);
+            }
+            else
+            {
+                bool isReturnedFilter = IsHistoryTab;
 
-            BorrowedBooks = new ObservableCollection<BorrowedBookInfo>(books);
+                var books = await _context.ChiTietMuonTras
+                    .Include(c => c.PhieuMuon)
+                    .Include(c => c.CuonSach)
+                    .ThenInclude(cs => cs!.Sach)
+                    .Where(c => c.PhieuMuon!.MaDocGia == readerId && (isReturnedFilter ? c.NgayTraThucTe != null : c.NgayTraThucTe == null))
+                    .Select(c => new BorrowedBookInfo
+                    {
+                        MaSach = c.MaCuonSach, // Ánh xạ sang MaCuonSach để hiển thị đúng ID vật lý trên cột DataGrid XAML
+                        MaCuonSach = c.MaCuonSach,
+                        MaYeuCau = 0,
+                        TenSach = c.CuonSach!.Sach != null ? c.CuonSach.Sach.TenSach : "Không xác định",
+                        NgayMuon = c.PhieuMuon!.NgayMuon,
+                        HanTra = c.HanTra,
+                        NgayTra = c.NgayTraThucTe,
+                        TienPhat = c.TienPhat,
+                        IsActionEnabled = c.NgayTraThucTe == null,
+                        ActionText = c.NgayTraThucTe == null ? "Nhận trả" : "Đã trả"
+                    })
+                    .ToListAsync();
+
+                BorrowedBooks = new ObservableCollection<BorrowedBookInfo>(books);
+            }
         }
 
         /// <summary>
@@ -283,26 +340,108 @@ namespace THUVIENZ.ViewModels
             if (param is BorrowedBookInfo book && SelectedReader != null)
             {
                 int currentReaderId = SelectedReader.MaDocGia;
-                try
+                
+                if (IsRequestTab)
                 {
-                    var ketQua = await _muonTraService.ThucHienTraSachAsync(book.MaCuonSach);
-                    if (ketQua.ThanhCong)
+                    // Thực hiện phê duyệt yêu cầu mượn sách
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
                     {
-                        MessageBox.Show(ketQua.ThongBao, "Hoàn tất trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
-                        
-                        // Tải lại danh sách readers đảm bảo phục hồi binding liền mạch
+                        // 1. Tìm cuốn sách vật lý (CuonSach) bất kỳ của đầu sách này có TrangThai là "Sẵn sàng"
+                        var cuonSach = await _context.CuonSachs
+                            .FirstOrDefaultAsync(cs => cs.MaSach == book.MaSach && cs.TinhTrang == "Sẵn sàng");
+
+                        if (cuonSach == null)
+                        {
+                            MessageBox.Show("Không có cuốn sách vật lý nào sẵn sàng cho mượn đối với đầu sách này.", "Không đủ sách vật lý", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+
+                        // 2. Kiểm tra các quy định hạn mức mượn sách
+                        int soSachToiDa = (int)await _settingsService.GetValueAsync("SoSachMuonToiDa");
+                        int soNgayMuonToiDa = (int)await _settingsService.GetValueAsync("SoNgayMuonToiDa");
+
+                        int soSachDangMuon = await _context.ChiTietMuonTras
+                            .Include(c => c.PhieuMuon)
+                            .CountAsync(c => c.PhieuMuon!.MaDocGia == currentReaderId && c.NgayTraThucTe == null);
+
+                        if (soSachDangMuon >= soSachToiDa)
+                        {
+                            MessageBox.Show($"Độc giả đã mượn tối đa số sách cho phép ({soSachToiDa} cuốn).", "Không thể phê duyệt", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+
+                        // 3. Tạo Phiếu Mượn và Chi Tiết Mượn Trả mới
+                        var phieuMuon = new PhieuMuon
+                        {
+                            MaDocGia = currentReaderId,
+                            NgayMuon = DateTime.Now
+                        };
+                        await _context.PhieuMuons.AddAsync(phieuMuon);
+                        await _context.SaveChangesAsync();
+
+                        var chiTiet = new ChiTietMuonTra
+                        {
+                            MaPhieuMuon = phieuMuon.MaPhieuMuon,
+                            MaCuonSach = cuonSach.MaCuonSach,
+                            HanTra = DateTime.Now.AddDays(soNgayMuonToiDa),
+                            NgayTraThucTe = null,
+                            TienPhat = 0
+                        };
+                        await _context.ChiTietMuonTras.AddAsync(chiTiet);
+
+                        // Cập nhật trạng thái cuốn sách thành "Đang mượn"
+                        cuonSach.TinhTrang = "Đang mượn";
+                        _context.CuonSachs.Update(cuonSach);
+
+                        // 4. Đánh dấu trạng thái yêu cầu mượn là "Notified"
+                        var request = await _context.YeuCauMuons.FindAsync(book.MaYeuCau);
+                        if (request != null)
+                        {
+                            request.TrangThai = "Notified";
+                            _context.YeuCauMuons.Update(request);
+                        }
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        MessageBox.Show("Phê duyệt yêu cầu mượn sách thành công!", "Hoàn tất phê duyệt", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        // Làm mới danh sách độc giả và sách
                         await LoadReadersAsync();
-                        
-                        // Nếu tài khoản vẫn còn sách đang mượn, tải tiếp chi tiết các cuốn còn lại
                         if (SelectedReader != null && SelectedReader.MaDocGia == currentReaderId)
                         {
                             await LoadBorrowedBooksAsync(currentReaderId);
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        MessageBox.Show($"Lỗi hệ thống khi phê duyệt: {ex.Message}", "Lỗi phê duyệt", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Lỗi xử lý trả sách: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                    // Logic nhận trả sách bình thường
+                    try
+                    {
+                        var ketQua = await _muonTraService.ThucHienTraSachAsync(book.MaCuonSach);
+                        if (ketQua.ThanhCong)
+                        {
+                            MessageBox.Show(ketQua.ThongBao, "Hoàn tất trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
+                            
+                            await LoadReadersAsync();
+                            
+                            if (SelectedReader != null && SelectedReader.MaDocGia == currentReaderId)
+                            {
+                                await LoadBorrowedBooksAsync(currentReaderId);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Lỗi xử lý trả sách: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
         }
@@ -319,6 +458,7 @@ namespace THUVIENZ.ViewModels
     {
         public int MaSach { get; set; }
         public int MaCuonSach { get; set; }
+        public int MaYeuCau { get; set; }
         public string TenSach { get; set; } = string.Empty;
         public DateTime NgayMuon { get; set; }
         public DateTime HanTra { get; set; }

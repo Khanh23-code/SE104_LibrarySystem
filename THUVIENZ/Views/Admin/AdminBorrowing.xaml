@@ -78,6 +78,9 @@
                         <TextBlock Text="Đang mượn (Hiện tại)" FontSize="15" FontWeight="Bold" Foreground="#1D4ED8"/>
                     </Border>
                     <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="15,8" Margin="0,0,8,0" Cursor="Hand">
+                        <TextBlock Text="Đang yêu cầu" FontSize="15" FontWeight="SemiBold" Foreground="#6B7280"/>
+                    </Border>
+                    <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="15,8" Margin="0,0,8,0" Cursor="Hand">
                         <TextBlock Text="Lịch sử (Đã xong)" FontSize="15" FontWeight="SemiBold" Foreground="#6B7280"/>
                     </Border>
                     <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="15,8" Cursor="Hand">
@@ -165,9 +168,36 @@
                                                 <DataTemplate>
                                                     <StackPanel VerticalAlignment="Center" Margin="5,8">
                                                         <TextBlock Text="{Binding TenSach}" FontSize="14" FontWeight="SemiBold" Foreground="#111827" TextWrapping="Wrap" Margin="0,0,0,4"/>
-                                                        <Border Background="#F3F4F6" CornerRadius="6" Padding="6,3" HorizontalAlignment="Left">
-                                                            <TextBlock Text="{Binding MaCuonSach, StringFormat='Mã vật lý: CS-{0}'}" FontSize="12" FontWeight="Medium" Foreground="#4B5563"/>
-                                                        </Border>
+                                                        <Grid>
+                                                            <!-- Hiển thị khi MaCuonSach != 0 (Có cuốn sách vật lý cụ thể) -->
+                                                            <Border Background="#F3F4F6" CornerRadius="6" Padding="6,3" HorizontalAlignment="Left">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding MaCuonSach}" Value="0">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock Text="{Binding MaCuonSach, StringFormat='Mã vật lý: CS-{0}'}" FontSize="12" FontWeight="Medium" Foreground="#4B5563"/>
+                                                            </Border>
+                                                            <!-- Hiển thị khi MaCuonSach == 0 (Yêu cầu chờ duyệt đầu sách) -->
+                                                            <Border Background="#FEF3C7" CornerRadius="6" Padding="6,3" HorizontalAlignment="Left">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding MaCuonSach}" Value="0">
+                                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock Text="Chờ phê duyệt đầu sách" FontSize="12" FontWeight="Medium" Foreground="#D97706"/>
+                                                            </Border>
+                                                        </Grid>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -177,16 +207,46 @@
                                         <DataGridTemplateColumn Header="Thời Hạn" Width="135">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
-                                                        <TextBlock FontSize="12" Foreground="#6B7280" Margin="0,0,0,3">
-                                                            <Run Text="Mượn: "/>
-                                                            <Run Text="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" FontWeight="Medium" Foreground="#374151"/>
-                                                        </TextBlock>
-                                                        <TextBlock FontSize="12" Foreground="#D97706" FontWeight="SemiBold">
-                                                            <Run Text="Hạn: "/>
-                                                            <Run Text="{Binding HanTra, StringFormat=dd/MM/yyyy}"/>
-                                                        </TextBlock>
-                                                    </StackPanel>
+                                                    <Grid VerticalAlignment="Center">
+                                                        <!-- Hiển thị khi MaCuonSach != 0 -->
+                                                        <StackPanel Margin="5,8">
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding MaCuonSach}" Value="0">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </StackPanel.Style>
+                                                            <TextBlock FontSize="12" Foreground="#6B7280" Margin="0,0,0,3">
+                                                                <Run Text="Mượn: "/>
+                                                                <Run Text="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" FontWeight="Medium" Foreground="#374151"/>
+                                                            </TextBlock>
+                                                            <TextBlock FontSize="12" Foreground="#D97706" FontWeight="SemiBold">
+                                                                <Run Text="Hạn: "/>
+                                                                <Run Text="{Binding HanTra, StringFormat=dd/MM/yyyy}"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <!-- Hiển thị khi MaCuonSach == 0 -->
+                                                        <StackPanel Margin="5,8">
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding MaCuonSach}" Value="0">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </StackPanel.Style>
+                                                            <TextBlock FontSize="12" Foreground="#6B7280">
+                                                                <Run Text="Yêu cầu: "/>
+                                                                <Run Text="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" FontWeight="Medium" Foreground="#374151"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </Grid>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -195,46 +255,73 @@
                                         <DataGridTemplateColumn Header="Thực Tế" Width="110">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
-                                                        <ContentControl Content="{Binding NgayTra}">
-                                                            <ContentControl.Style>
-                                                                <Style TargetType="ContentControl">
-                                                                    <Setter Property="ContentTemplate">
-                                                                        <Setter.Value>
-                                                                            <DataTemplate>
-                                                                                <TextBlock Text="{Binding StringFormat='Trả: {0:dd/MM/yyyy}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,0,3"/>
-                                                                            </DataTemplate>
-                                                                        </Setter.Value>
-                                                                    </Setter>
+                                                    <Grid VerticalAlignment="Center">
+                                                        <!-- Hiển thị khi MaCuonSach != 0 -->
+                                                        <StackPanel Margin="5,8">
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
                                                                     <Style.Triggers>
-                                                                        <Trigger Property="Content" Value="{x:Null}">
-                                                                            <Setter Property="ContentTemplate">
-                                                                                <Setter.Value>
-                                                                                    <DataTemplate>
-                                                                                        <TextBlock Text="⏳ Chưa trả" FontSize="12" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,3"/>
-                                                                                    </DataTemplate>
-                                                                                </Setter.Value>
-                                                                            </Setter>
-                                                                        </Trigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </ContentControl.Style>
-                                                        </ContentControl>
-                                                        
-                                                        <TextBlock Text="{Binding TienPhat, StringFormat='Phạt: {0:N0} đ'}" FontSize="12" FontWeight="Bold">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Foreground" Value="#EF4444"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding TienPhat}" Value="0">
-                                                                            <Setter Property="Foreground" Value="#9CA3AF"/>
-                                                                            <Setter Property="FontWeight" Value="Normal"/>
+                                                                        <DataTrigger Binding="{Binding MaCuonSach}" Value="0">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </StackPanel>
+                                                            </StackPanel.Style>
+                                                            <ContentControl Content="{Binding NgayTra}">
+                                                                <ContentControl.Style>
+                                                                    <Style TargetType="ContentControl">
+                                                                        <Setter Property="ContentTemplate">
+                                                                            <Setter.Value>
+                                                                                <DataTemplate>
+                                                                                    <TextBlock Text="{Binding StringFormat='Trả: {0:dd/MM/yyyy}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,0,3"/>
+                                                                                </DataTemplate>
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                        <Style.Triggers>
+                                                                            <Trigger Property="Content" Value="{x:Null}">
+                                                                                <Setter Property="ContentTemplate">
+                                                                                    <Setter.Value>
+                                                                                        <DataTemplate>
+                                                                                            <TextBlock Text="⏳ Chưa trả" FontSize="12" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,3"/>
+                                                                                        </DataTemplate>
+                                                                                    </Setter.Value>
+                                                                                </Setter>
+                                                                            </Trigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </ContentControl.Style>
+                                                            </ContentControl>
+                                                            
+                                                            <TextBlock Text="{Binding TienPhat, StringFormat='Phạt: {0:N0} đ'}" FontSize="12" FontWeight="Bold">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#EF4444"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding TienPhat}" Value="0">
+                                                                                <Setter Property="Foreground" Value="#9CA3AF"/>
+                                                                                <Setter Property="FontWeight" Value="Normal"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <!-- Hiển thị khi MaCuonSach == 0 -->
+                                                        <StackPanel Margin="5,8">
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding MaCuonSach}" Value="0">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </StackPanel.Style>
+                                                            <TextBlock Text="⏳ Chờ duyệt" FontSize="12" FontWeight="SemiBold" Foreground="#D97706"/>
+                                                        </StackPanel>
+                                                    </Grid>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
