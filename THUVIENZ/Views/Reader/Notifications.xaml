@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="THUVIENZ.Views.Notifications"
+<UserControl x:Class="THUVIENZ.Views.Notifications"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:comp="clr-namespace:THUVIENZ.Views.Components"
@@ -27,33 +27,6 @@
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel x:Name="NotificationContainer" Margin="0,0,10,0">
-                        <comp:NotificationCard NotiType="Success" 
-                                               Title="Kích hoạt thành công" 
-                                               Message="Chào mừng độc giả Khang! Tài khoản Librix của bạn đã được kích hoạt thành công. Hãy bắt đầu khám phá hàng ngàn cuốn sách ngay hôm nay." 
-                                               Timestamp="Vừa xong" 
-                                               OnCloseRequested="NotificationCard_OnCloseRequested" 
-                                               OnCardClicked="NotificationCard_OnCardClicked"/>
-
-                        <comp:NotificationCard NotiType="Warning" 
-                                               Title="Sách sắp hết hạn" 
-                                               Message="Cảnh báo: Cuốn sách 'Clean Code' của bạn còn 3 ngày nữa là hết hạn trả. Vui lòng gia hạn hoặc trả sách đúng hạn để tránh phát sinh phí phạt." 
-                                               Timestamp="2 giờ trước" 
-                                               OnCloseRequested="NotificationCard_OnCloseRequested" 
-                                               OnCardClicked="NotificationCard_OnCardClicked"/>
-
-                        <comp:NotificationCard NotiType="Failure" 
-                                               Title="Gia hạn thất bại" 
-                                               Message="Gia hạn thất bại: Hệ thống không thể xử lý yêu cầu gia hạn cuốn 'Nhà Giả Kim'. Vui lòng kiểm tra lại kết nối mạng hoặc liên hệ thủ thư." 
-                                               Timestamp="1 ngày trước" 
-                                               OnCloseRequested="NotificationCard_OnCloseRequested" 
-                                               OnCardClicked="NotificationCard_OnCardClicked"/>
-
-                        <comp:NotificationCard NotiType="Info" 
-                                               Title="Cập nhật quy định mới" 
-                                               Message="Thông báo: Thư viện Librix cập nhật khung phạt mới đối với các đầu sách hư hại hoặc làm mất kể từ ngày 20/05. Chi tiết vui lòng xem tại bảng tin." 
-                                               Timestamp="3 ngày trước" 
-                                               OnCloseRequested="NotificationCard_OnCloseRequested" 
-                                               OnCardClicked="NotificationCard_OnCardClicked"/>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

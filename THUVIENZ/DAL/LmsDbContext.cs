@@ -31,6 +31,7 @@ namespace THUVIENZ.DAL
         public DbSet<PhieuThuTienPhat> PhieuThuTienPhats { get; set; } = null!;
         public DbSet<SachYeuThich> SachYeuThichs { get; set; } = null!;
         public DbSet<YeuCauMuon> YeuCauMuons { get; set; } = null!;
+        public DbSet<ThongBao> ThongBaos { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -64,6 +65,7 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<PhieuThuTienPhat>().ToTable("PHIEUTHUTIENPHAT");
             modelBuilder.Entity<SachYeuThich>().ToTable("SACHYEUTHICH");
             modelBuilder.Entity<YeuCauMuon>().ToTable("YEUCAUMUON");
+            modelBuilder.Entity<ThongBao>().ToTable("THONGBAO");
 
             // ====================================================================
             // 2. ĐỊNH NGHĨA KHÓA CHÍNH (PRIMARY KEYS)
@@ -78,6 +80,7 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<ThamSo>().HasKey(t => t.TenThamSo);
             modelBuilder.Entity<PhieuThuTienPhat>().HasKey(p => p.MaPhieuThu);
             modelBuilder.Entity<YeuCauMuon>().HasKey(y => y.MaYeuCau);
+            modelBuilder.Entity<ThongBao>().HasKey(t => t.MaThongBao);
             modelBuilder.Entity<SachYeuThich>().HasKey(s => new { s.MaDocGia, s.MaSach });
 
             // Cấu hình Khóa chính phức hợp (Composite Key) cho bảng gộp mượn trả
@@ -173,6 +176,13 @@ namespace THUVIENZ.DAL
                 .HasOne(y => y.Sach)
                 .WithMany()
                 .HasForeignKey(y => y.MaSach)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Quan hệ: Thông báo - Tài khoản
+            modelBuilder.Entity<ThongBao>()
+                .HasOne(t => t.TaiKhoan)
+                .WithMany()
+                .HasForeignKey(t => t.TenDangNhap)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

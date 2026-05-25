@@ -73,8 +73,9 @@ namespace THUVIENZ.BLL
                 {
                     chiTiet = await context.ChiTietMuonTras
                         .Include(c => c.CuonSach)
+                            .ThenInclude(cs => cs!.Sach)
                         .Include(c => c.PhieuMuon)
-                        .ThenInclude(p => p!.DocGia)
+                            .ThenInclude(p => p!.DocGia)
                         .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.MaPhieuMuon == maPhieuMuon && c.NgayTraThucTe == null);
                 }
 
@@ -82,8 +83,9 @@ namespace THUVIENZ.BLL
                 {
                     chiTiet = await context.ChiTietMuonTras
                         .Include(c => c.CuonSach)
+                            .ThenInclude(cs => cs!.Sach)
                         .Include(c => c.PhieuMuon)
-                        .ThenInclude(p => p!.DocGia)
+                            .ThenInclude(p => p!.DocGia)
                         .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.NgayTraThucTe == null);
                 }
 
@@ -138,6 +140,57 @@ namespace THUVIENZ.BLL
 
                 // Lưu toàn bộ thay đổi xuống DB
                 await context.SaveChangesAsync();
+
+                // Tạo các thông báo tương ứng cho độc giả
+                if (chiTiet.PhieuMuon?.DocGia != null && !string.IsNullOrEmpty(chiTiet.PhieuMuon.DocGia.TenDangNhap))
+                {
+                    string username = chiTiet.PhieuMuon.DocGia.TenDangNhap;
+                    string tenSach = chiTiet.CuonSach?.Sach?.TenSach ?? "Sách";
+                    
+                    // 1. Thông báo trả sách thành công (Return verified)
+                    var notiTra = new ThongBao
+                    {
+                        TenDangNhap = username,
+                        TieuDe = "Trả sách thành công",
+                        NoiDung = $"Cuốn sách '{tenSach}' đã được thủ thư nhận lại và xác nhận hoàn trả thành công.",
+                        LoaiThongBao = "Success",
+                        NgayThongBao = DateTime.Now,
+                        DaDoc = false
+                    };
+                    context.ThongBaos.Add(notiTra);
+
+                    // 2. Thông báo phạt tiền nếu có (Late fee incurred)
+                    if (tienPhat > 0)
+                    {
+                        var notiPhat = new ThongBao
+                        {
+                            TenDangNhap = username,
+                            TieuDe = "Phát sinh phí phạt trễ hạn",
+                            NoiDung = $"Bạn bị phạt {tienPhat:N0} VNĐ cho cuốn sách '{tenSach}' do trả trễ {soNgayTre} ngày.",
+                            LoaiThongBao = "Warning",
+                            NgayThongBao = DateTime.Now,
+                            DaDoc = false
+                        };
+                        context.ThongBaos.Add(notiPhat);
+                    }
+
+                    // 3. Thông báo tài khoản bị đình chỉ nếu tổng nợ vượt ngưỡng (Suspension warnings)
+                    if (biDinhChi)
+                    {
+                        var notiDinhChi = new ThongBao
+                        {
+                            TenDangNhap = username,
+                            TieuDe = "Tài khoản bị khóa",
+                            NoiDung = $"Tài khoản của bạn đã bị khóa tự động do tổng nợ đọng ({chiTiet.PhieuMuon.DocGia.TongNo:N0} VNĐ) vượt quá ngưỡng cho phép.",
+                            LoaiThongBao = "Failure",
+                            NgayThongBao = DateTime.Now,
+                            DaDoc = false
+                        };
+                        context.ThongBaos.Add(notiDinhChi);
+                    }
+
+                    await context.SaveChangesAsync();
+                }
 
                 // Xác nhận giao dịch thành công
                 await transaction.CommitAsync();

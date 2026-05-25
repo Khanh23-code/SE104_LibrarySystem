@@ -144,6 +144,19 @@ CREATE TABLE YEUCAUMUON (
 );
 GO
 
+-- 13. THÔNG BÁO (THONGBAO) - Lưu thông báo hoạt động của độc giả
+CREATE TABLE THONGBAO (
+    MaThongBao INT PRIMARY KEY IDENTITY(1,1),
+    TenDangNhap VARCHAR(50) NOT NULL,
+    TieuDe NVARCHAR(150) NOT NULL,
+    NoiDung NVARCHAR(500) NOT NULL,
+    LoaiThongBao NVARCHAR(20) NOT NULL CHECK (LoaiThongBao IN ('Success', 'Failure', 'Warning', 'Info')),
+    NgayThongBao DATETIME DEFAULT GETDATE(),
+    DaDoc BIT DEFAULT 0,
+    FOREIGN KEY (TenDangNhap) REFERENCES TAIKHOAN(TenDangNhap) ON DELETE CASCADE
+);
+GO
+
 -- ======================================================================
 -- BỘ DỮ LIỆU KHỞI TẠO MẶC ĐỊNH
 -- ======================================================================

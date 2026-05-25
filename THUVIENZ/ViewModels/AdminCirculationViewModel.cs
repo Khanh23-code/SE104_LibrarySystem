@@ -412,6 +412,22 @@ namespace THUVIENZ.ViewModels
                             request.TrangThai = "Notified";
                         }
 
+                        // Sinh thông báo phê duyệt mượn sách thành công cho độc giả
+                        var docGia = await context.DocGias.FindAsync(currentReaderId);
+                        if (docGia != null && !string.IsNullOrEmpty(docGia.TenDangNhap))
+                        {
+                            var notification = new ThongBao
+                            {
+                                TenDangNhap = docGia.TenDangNhap,
+                                TieuDe = "Yêu cầu mượn sách được phê duyệt",
+                                NoiDung = $"Yêu cầu mượn cuốn sách '{book.TenSach}' của bạn đã được phê duyệt thành công. Vui lòng nhận sách tại quầy.",
+                                LoaiThongBao = "Success",
+                                NgayThongBao = DateTime.Now,
+                                DaDoc = false
+                            };
+                            await context.ThongBaos.AddAsync(notification);
+                        }
+
                         await context.SaveChangesAsync();
                         await transaction.CommitAsync();
 
