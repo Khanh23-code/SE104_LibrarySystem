@@ -268,30 +268,7 @@
                                                                     </Style.Triggers>
                                                                 </Style>
                                                             </StackPanel.Style>
-                                                            <ContentControl Content="{Binding NgayTra}">
-                                                                <ContentControl.Style>
-                                                                    <Style TargetType="ContentControl">
-                                                                        <Setter Property="ContentTemplate">
-                                                                            <Setter.Value>
-                                                                                <DataTemplate>
-                                                                                    <TextBlock Text="{Binding StringFormat='Trả: {0:dd/MM/yyyy}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,0,3"/>
-                                                                                </DataTemplate>
-                                                                            </Setter.Value>
-                                                                        </Setter>
-                                                                        <Style.Triggers>
-                                                                            <Trigger Property="Content" Value="{x:Null}">
-                                                                                <Setter Property="ContentTemplate">
-                                                                                    <Setter.Value>
-                                                                                        <DataTemplate>
-                                                                                            <TextBlock Text="⏳ Chưa trả" FontSize="12" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,3"/>
-                                                                                        </DataTemplate>
-                                                                                    </Setter.Value>
-                                                                                </Setter>
-                                                                            </Trigger>
-                                                                        </Style.Triggers>
-                                                                    </Style>
-                                                                </ContentControl.Style>
-                                                            </ContentControl>
+                                                            <TextBlock Text="{Binding StatusText}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding StatusColor}" Margin="0,0,0,3"/>
                                                             
                                                             <TextBlock Text="{Binding TienPhat, StringFormat='Phạt: {0:N0} đ'}" FontSize="12" FontWeight="Bold">
                                                                 <TextBlock.Style>

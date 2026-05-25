@@ -13,9 +13,9 @@ namespace THUVIENZ.BLL
     /// </summary>
     public class SearchService
     {
-        private readonly LmsDbContext _context;
+        private readonly LmsDbContext? _context;
 
-        public SearchService() : this(new LmsDbContext())
+        public SearchService()
         {
         }
 
@@ -31,7 +31,10 @@ namespace THUVIENZ.BLL
         {
             string cleanKeyword = keyword?.Trim() ?? string.Empty;
             
-            return await _context.Sachs
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
+            return await context.Sachs
                 .AsNoTracking()
                 .Include(s => s.TheLoaiSach)
                 .Where(s => s.TenSach.Contains(cleanKeyword) || (s.TacGia != null && s.TacGia.Contains(cleanKeyword)))
@@ -47,7 +50,10 @@ namespace THUVIENZ.BLL
             string cleanQuery = query?.Trim() ?? string.Empty;
             if (string.IsNullOrEmpty(cleanQuery)) return Enumerable.Empty<SuggestionDto>();
 
-            return await _context.Sachs
+            using var localContext = _context == null ? new LmsDbContext() : null;
+            var context = _context ?? localContext!;
+
+            return await context.Sachs
                 .AsNoTracking()
                 .Where(s => s.TenSach.Contains(cleanQuery) || (s.TacGia != null && s.TacGia.Contains(cleanQuery)))
                 .Take(10) // Giới hạn Top 10 theo yêu cầu của Lead

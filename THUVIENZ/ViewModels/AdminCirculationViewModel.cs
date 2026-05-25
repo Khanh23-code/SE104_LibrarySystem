@@ -20,7 +20,6 @@ namespace THUVIENZ.ViewModels
     /// </summary>
     public class AdminCirculationViewModel : ObservableObject
     {
-        private readonly LmsDbContext _context;
         private readonly MuonTraService _muonTraService;
         private readonly LibrarySettingsService _settingsService;
 
@@ -148,7 +147,6 @@ namespace THUVIENZ.ViewModels
 
         public AdminCirculationViewModel()
         {
-            _context = new LmsDbContext();
             _muonTraService = new MuonTraService();
             _settingsService = new LibrarySettingsService();
 
@@ -217,7 +215,8 @@ namespace THUVIENZ.ViewModels
             // Lưu lại ID độc giả đang được chọn trước khi nạp lại danh sách
             int? currentSelectedId = _selectedReader?.MaDocGia;
 
-            var query = _context.DocGias.AsQueryable();
+            using var context = new LmsDbContext();
+            var query = context.DocGias.AsQueryable();
 
             if (!string.IsNullOrEmpty(keyword))
             {
@@ -232,7 +231,7 @@ namespace THUVIENZ.ViewModels
                     {
                         MaDocGia = d.MaDocGia,
                         HoTen = d.HoTen,
-                        BorrowCount = _context.YeuCauMuons
+                        BorrowCount = context.YeuCauMuons
                             .Count(y => y.MaDocGia == d.MaDocGia && y.TrangThai == "Pending")
                     })
                     .Where(x => x.BorrowCount > 0)
@@ -245,7 +244,7 @@ namespace THUVIENZ.ViewModels
                     {
                         MaDocGia = d.MaDocGia,
                         HoTen = d.HoTen,
-                        BorrowCount = _context.ChiTietMuonTras
+                        BorrowCount = context.ChiTietMuonTras
                             .Include(c => c.PhieuMuon)
                             .Count(c => c.PhieuMuon!.MaDocGia == d.MaDocGia && (isReturnedFilter ? c.NgayTraThucTe != null : c.NgayTraThucTe == null))
                     })
@@ -276,9 +275,10 @@ namespace THUVIENZ.ViewModels
         /// </summary>
         public async Task LoadBorrowedBooksAsync(int readerId)
         {
+            using var context = new LmsDbContext();
             if (IsRequestTab)
             {
-                var requests = await _context.YeuCauMuons
+                var requests = await context.YeuCauMuons
                     .Include(y => y.Sach)
                     .Where(y => y.MaDocGia == readerId && y.TrangThai == "Pending")
                     .Select(y => new BorrowedBookInfo
@@ -286,13 +286,16 @@ namespace THUVIENZ.ViewModels
                         MaSach = y.MaSach,
                         MaCuonSach = 0,
                         MaYeuCau = y.MaYeuCau,
+                        MaPhieuMuon = 0,
                         TenSach = y.Sach != null ? y.Sach.TenSach : "Không xác định",
                         NgayMuon = y.NgayYeuCau,
                         HanTra = DateTime.Now,
                         NgayTra = null,
                         TienPhat = 0,
                         IsActionEnabled = true,
-                        ActionText = "Phê duyệt"
+                        ActionText = "Phê duyệt",
+                        StatusText = "⏳ Chờ duyệt",
+                        StatusColor = "#D97706"
                     })
                     .ToListAsync();
 
@@ -302,7 +305,7 @@ namespace THUVIENZ.ViewModels
             {
                 bool isReturnedFilter = IsHistoryTab;
 
-                var books = await _context.ChiTietMuonTras
+                var books = await context.ChiTietMuonTras
                     .Include(c => c.PhieuMuon)
                     .Include(c => c.CuonSach)
                     .ThenInclude(cs => cs!.Sach)
@@ -312,13 +315,20 @@ namespace THUVIENZ.ViewModels
                         MaSach = c.MaCuonSach, // Ánh xạ sang MaCuonSach để hiển thị đúng ID vật lý trên cột DataGrid XAML
                         MaCuonSach = c.MaCuonSach,
                         MaYeuCau = 0,
+                        MaPhieuMuon = c.MaPhieuMuon,
                         TenSach = c.CuonSach!.Sach != null ? c.CuonSach.Sach.TenSach : "Không xác định",
                         NgayMuon = c.PhieuMuon!.NgayMuon,
                         HanTra = c.HanTra,
                         NgayTra = c.NgayTraThucTe,
                         TienPhat = c.TienPhat,
                         IsActionEnabled = c.NgayTraThucTe == null,
-                        ActionText = c.NgayTraThucTe == null ? "Nhận trả" : "Đã trả"
+                        ActionText = c.NgayTraThucTe == null ? (c.TinhTrangCuonSachKhiTra == "Yêu cầu trả" ? "Duyệt trả" : "Nhận trả") : "Đã trả",
+                        StatusText = c.NgayTraThucTe != null 
+                            ? $"Trả: {c.NgayTraThucTe.Value:dd/MM/yyyy}" 
+                            : (c.TinhTrangCuonSachKhiTra == "Yêu cầu trả" ? "⏳ Chờ duyệt trả" : "⏳ Chưa trả"),
+                        StatusColor = c.NgayTraThucTe != null 
+                            ? "#10B981" 
+                            : (c.TinhTrangCuonSachKhiTra == "Yêu cầu trả" ? "#D97706" : "#EF4444")
                     })
                     .ToListAsync();
 
@@ -344,11 +354,12 @@ namespace THUVIENZ.ViewModels
                 if (IsRequestTab)
                 {
                     // Thực hiện phê duyệt yêu cầu mượn sách
-                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    using var context = new LmsDbContext();
+                    using var transaction = await context.Database.BeginTransactionAsync();
                     try
                     {
                         // 1. Tìm cuốn sách vật lý (CuonSach) bất kỳ của đầu sách này có TrangThai là "Sẵn sàng"
-                        var cuonSach = await _context.CuonSachs
+                        var cuonSach = await context.CuonSachs
                             .FirstOrDefaultAsync(cs => cs.MaSach == book.MaSach && cs.TinhTrang == "Sẵn sàng");
 
                         if (cuonSach == null)
@@ -361,7 +372,7 @@ namespace THUVIENZ.ViewModels
                         int soSachToiDa = (int)await _settingsService.GetValueAsync("SoSachMuonToiDa");
                         int soNgayMuonToiDa = (int)await _settingsService.GetValueAsync("SoNgayMuonToiDa");
 
-                        int soSachDangMuon = await _context.ChiTietMuonTras
+                        int soSachDangMuon = await context.ChiTietMuonTras
                             .Include(c => c.PhieuMuon)
                             .CountAsync(c => c.PhieuMuon!.MaDocGia == currentReaderId && c.NgayTraThucTe == null);
 
@@ -377,8 +388,8 @@ namespace THUVIENZ.ViewModels
                             MaDocGia = currentReaderId,
                             NgayMuon = DateTime.Now
                         };
-                        await _context.PhieuMuons.AddAsync(phieuMuon);
-                        await _context.SaveChangesAsync();
+                        await context.PhieuMuons.AddAsync(phieuMuon);
+                        await context.SaveChangesAsync();
 
                         var chiTiet = new ChiTietMuonTra
                         {
@@ -388,21 +399,20 @@ namespace THUVIENZ.ViewModels
                             NgayTraThucTe = null,
                             TienPhat = 0
                         };
-                        await _context.ChiTietMuonTras.AddAsync(chiTiet);
+                        await context.ChiTietMuonTras.AddAsync(chiTiet);
 
                         // Cập nhật trạng thái cuốn sách thành "Đang mượn"
                         cuonSach.TinhTrang = "Đang mượn";
-                        _context.CuonSachs.Update(cuonSach);
+                        context.CuonSachs.Update(cuonSach);
 
                         // 4. Đánh dấu trạng thái yêu cầu mượn là "Notified"
-                        var request = await _context.YeuCauMuons.FindAsync(book.MaYeuCau);
+                        var request = await context.YeuCauMuons.FindAsync(book.MaYeuCau);
                         if (request != null)
                         {
                             request.TrangThai = "Notified";
-                            _context.YeuCauMuons.Update(request);
                         }
 
-                        await _context.SaveChangesAsync();
+                        await context.SaveChangesAsync();
                         await transaction.CommitAsync();
 
                         MessageBox.Show("Phê duyệt yêu cầu mượn sách thành công!", "Hoàn tất phê duyệt", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -425,7 +435,7 @@ namespace THUVIENZ.ViewModels
                     // Logic nhận trả sách bình thường
                     try
                     {
-                        var ketQua = await _muonTraService.ThucHienTraSachAsync(book.MaCuonSach);
+                        var ketQua = await _muonTraService.ThucHienTraSachAsync(book.MaCuonSach, book.MaPhieuMuon);
                         if (ketQua.ThanhCong)
                         {
                             MessageBox.Show(ketQua.ThongBao, "Hoàn tất trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -459,6 +469,7 @@ namespace THUVIENZ.ViewModels
         public int MaSach { get; set; }
         public int MaCuonSach { get; set; }
         public int MaYeuCau { get; set; }
+        public int MaPhieuMuon { get; set; }
         public string TenSach { get; set; } = string.Empty;
         public DateTime NgayMuon { get; set; }
         public DateTime HanTra { get; set; }
@@ -466,5 +477,7 @@ namespace THUVIENZ.ViewModels
         public decimal TienPhat { get; set; }
         public bool IsActionEnabled { get; set; } = true;
         public string ActionText { get; set; } = "Nhận trả";
+        public string StatusText { get; set; } = string.Empty;
+        public string StatusColor { get; set; } = "#EF4444";
     }
 }

@@ -18,7 +18,6 @@ namespace THUVIENZ.ViewModels
     /// </summary>
     public class ReaderManagementViewModel : ObservableObject
     {
-        private readonly LmsDbContext _context;
         private readonly ReaderManagementService _readerService;
 
         private ObservableCollection<DocGia> _readers = new ObservableCollection<DocGia>();
@@ -103,7 +102,6 @@ namespace THUVIENZ.ViewModels
 
         public ReaderManagementViewModel()
         {
-            _context = new LmsDbContext();
             _readerService = new ReaderManagementService();
 
             LoadReadersCommand = new RelayCommand(async _ => await LoadDataAsync());
